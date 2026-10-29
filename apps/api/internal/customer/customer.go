@@ -311,4 +311,3 @@ func (s Service) deleteAddress(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(204)
 }
-
