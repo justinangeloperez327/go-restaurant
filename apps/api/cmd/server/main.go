@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/config"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/db"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
 )
 
@@ -33,13 +35,24 @@ func main() {
 	}
 	defer pool.Close()
 
+	initCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	if err := db.Migrate(initCtx, pool); err != nil {
+		log.Error("database migration failed", "error", err)
+		os.Exit(1)
+	}
+	service, err := auth.NewService(cfg, pool)
+	if err != nil {
+		log.Error("authentication configuration failed", "error", err)
+		os.Exit(1)
+	}
+
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewRouter(pool.Ping),
+		Handler:           httpapi.NewAppRouter(pool.Ping, service, cfg.WebOrigin),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-
 	shutdownDone := make(chan struct{})
 	go func() {
 		select {

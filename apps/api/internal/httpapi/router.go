@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
 )
 
 type databaseCheck func(context.Context) error
@@ -17,15 +18,20 @@ type statusResponse struct {
 	Database string `json:"database,omitempty"`
 }
 
+// NewRouter retains the Group 1 health-only router for independent tests.
 func NewRouter(check databaseCheck) http.Handler {
+	return NewAppRouter(check, nil, "")
+}
+
+func NewAppRouter(check databaseCheck, service *auth.Service, webOrigin string) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
+	r.Use(cors(webOrigin))
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, statusResponse{Status: "ok"})
 	})
-
 	r.Get("/readyz", func(w http.ResponseWriter, req *http.Request) {
 		ctx, cancel := context.WithTimeout(req.Context(), 2*time.Second)
 		defer cancel()
@@ -37,8 +43,32 @@ func NewRouter(check databaseCheck) http.Handler {
 		}
 		writeJSON(w, http.StatusOK, statusResponse{Status: "ready", Database: "up"})
 	})
-
+	if service != nil {
+		r.Route("/api/v1", service.Mount)
+	}
 	return r
+}
+
+func cors(allowedOrigin string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				w.Header().Add("Vary", "Origin")
+			}
+			if allowedOrigin != "" && origin == allowedOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+				if r.Method == http.MethodOptions {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func writeJSON(w http.ResponseWriter, code int, value statusResponse) {

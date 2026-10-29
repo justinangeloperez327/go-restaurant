@@ -1,3 +1,5 @@
+import { AuthPanel } from "./auth-panel";
+
 type ApiState = "online" | "offline";
 
 async function getApiState(): Promise<ApiState> {
@@ -15,26 +17,29 @@ async function getApiState(): Promise<ApiState> {
 
 export default async function HomePage() {
   const api = await getApiState();
+  const apiURL = process.env.API_PUBLIC_URL ?? "http://localhost:8080";
 
   return (
     <main className="container">
       <header className="topbar">
         <div className="brand"><span className="brand-mark">G</span> Go Restaurant</div>
-        <span className="tag">Group 1 · Foundation</span>
+        <span className="tag">Group 2 · Authentication and RBAC</span>
       </header>
       <section className="hero">
         <span className="eyebrow">RESTAURANT PLATFORM</span>
-        <h1>A clean foundation for ordering, meal plans, and delivery.</h1>
+        <h1>Your meals, your schedule, one account.</h1>
         <p>
-          Go API, PostgreSQL, and Next.js are connected. Customer ordering,
-          subscriptions, rider tracking, and administration will be built in the next groups.
+          Go, Next.js, and PostgreSQL power the platform. Google and Apple
+          sign-in, account sessions, and server-enforced roles are now available
+          when provider credentials are configured.
         </p>
         <div className="status">
           <span className={api === "online" ? "dot online" : "dot offline"} aria-hidden="true" />
           <span>Go API: <strong>{api}</strong></span>
         </div>
+        <AuthPanel apiURL={apiURL} />
       </section>
-      <footer>Go Restaurant · Development foundation</footer>
+      <footer>Go Restaurant · Authentication and RBAC foundation</footer>
     </main>
   );
 }

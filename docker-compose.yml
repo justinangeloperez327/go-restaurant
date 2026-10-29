@@ -7,16 +7,13 @@ services:
       POSTGRES_USER: restaurant
       POSTGRES_PASSWORD: restaurant_dev
       POSTGRES_DB: restaurant
-    ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: [postgres_data:/var/lib/postgresql]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U restaurant -d restaurant"]
       interval: 5s
       timeout: 5s
       retries: 15
-
   api:
     build:
       context: .
@@ -25,12 +22,18 @@ services:
     environment:
       PORT: "8080"
       DATABASE_URL: postgres://restaurant:restaurant_dev@db:5432/restaurant?sslmode=disable
-    ports:
-      - "127.0.0.1:8080:8080"
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY_PEM: ${APPLE_PRIVATE_KEY_PEM:-}
+    ports: ["127.0.0.1:8080:8080"]
     depends_on:
       db:
         condition: service_healthy
-
   web:
     build:
       context: .
@@ -39,11 +42,9 @@ services:
     environment:
       NODE_ENV: production
       API_INTERNAL_URL: http://api:8080
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
       NEXT_TELEMETRY_DISABLED: "1"
-    ports:
-      - "127.0.0.1:3000:3000"
-    depends_on:
-      - api
-
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [api]
 volumes:
   postgres_data:
