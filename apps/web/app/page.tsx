@@ -23,12 +23,16 @@ export default async function Home() {
   return <main className="container">
     <header className="topbar">
       <div className="brand"><span className="brand-mark">G</span> Go Restaurant</div>
-      <Link href="/admin/catalog" className="action secondary">Restaurant admin</Link>
+      <div className="record-actions">
+        <Link href="/account" className="action secondary">My account</Link>
+        <Link href="/cart" className="action secondary">My cart</Link>
+        <Link href="/admin/catalog" className="action secondary">Restaurant admin</Link>
+      </div>
     </header>
     <section className="hero">
       <span className="eyebrow">MEALS & SUBSCRIPTIONS</span>
       <h1>Fresh meals, simple ordering.</h1>
-      <p>Explore published restaurant menus. Customer ordering and meal subscriptions are coming in the next development groups.</p>
+      <p>Explore published restaurant menus. Create your cart with customizable meals. Checkout and subscriptions are coming next.</p>
       <div className="status"><span className={api === "online" ? "dot online" : "dot offline"} aria-hidden="true" />
         <span>Go API: <strong>{api}</strong></span></div>
       <AuthPanel apiURL={process.env.API_PUBLIC_URL ?? "http://localhost:8080"} />
@@ -41,6 +45,6 @@ export default async function Home() {
         <div className="restaurant-content"><strong>{r.name}</strong><p>{r.description}</p><span className="muted">View menu · {r.currency}</span></div>
       </Link>)}</div>
     </section>
-    <footer>Go Restaurant · Group 3 catalog</footer>
+    <footer>Go Restaurant · Group 4 · Profiles, addresses and cart</footer>
   </main>;
 }

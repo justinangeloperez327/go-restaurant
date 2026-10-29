@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddToCart } from "./add-to-cart";
 import { notFound } from "next/navigation";
 
 type Restaurant = { id: string; name: string; description: string; currency: string; image_url: string };
@@ -25,7 +26,9 @@ export default async function MenuPage({ params }: { params: Promise<{ id: strin
   if (!menu) notFound();
   const r = menu.restaurant;
   return <main className="container">
-    <header className="topbar"><Link className="brand" href="/"><span className="brand-mark">G</span> Go Restaurant</Link><Link href="/" className="action secondary">All restaurants</Link></header>
+    <header className="topbar"><Link className="brand" href="/"><span className="brand-mark">G</span> Go Restaurant</Link><div className="record-actions"><Link href="/cart" className="action secondary">My cart</Link>
+      <Link href="/account" className="action secondary">My account</Link>
+      <Link href="/" className="action secondary">All restaurants</Link></div></header>
     <section className="catalog-header"><span className="eyebrow">RESTAURANT MENU</span><h1>{r.name}</h1><p>{r.description}</p></section>
     {menu.categories.map((category) => {
       const meals = menu.meals.filter((m) => m.category_id === category.id);
@@ -36,15 +39,14 @@ export default async function MenuPage({ params }: { params: Promise<{ id: strin
           <div className="restaurant-content"><div className="meal-heading"><strong>{meal.name}</strong><strong>{amount(meal.price_minor, r.currency)}</strong></div>
           <p>{meal.description}</p>
           {!meal.is_available && <span className="notice">Currently unavailable</span>}
-          {menu.modifier_groups.filter((g) => g.meal_id === meal.id).map((group) => <div className="modifier" key={group.id}>
-            <strong>{group.name}</strong><small className="muted">Choose {group.min_select}–{group.max_select}</small>
-            <div>{menu.modifier_options.filter((opt) => opt.group_id === group.id).map((opt) =>
-              <div key={opt.id} className="option"><span>{opt.name}</span><span>{opt.price_delta_minor ? "+" + amount(opt.price_delta_minor, r.currency) : "Included"}</span></div>)}</div>
-          </div>)}
+          <AddToCart mealID={meal.id} available={meal.is_available} currency={r.currency}
+            apiURL={process.env.API_PUBLIC_URL ?? "http://localhost:8080"}
+            groups={menu.modifier_groups.filter((g) => g.meal_id === meal.id)}
+            options={menu.modifier_options} />
           </div>
         </article>)}</div>
       </section>;
     })}
-    <footer>Online checkout becomes available in Group 5.</footer>
+    <footer>Your cart is persistent. Checkout becomes available in Group 5.</footer>
   </main>;
 }

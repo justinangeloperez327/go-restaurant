@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
 )
 
 type databaseCheck func(context.Context) error
@@ -25,6 +26,10 @@ func NewRouter(check databaseCheck) http.Handler {
 }
 
 func NewAppRouter(check databaseCheck, service *auth.Service, webOrigin string, catalogs ...*catalog.Service) http.Handler {
+	return NewCustomerAppRouter(check, service, webOrigin, nil, catalogs...)
+}
+
+func NewCustomerAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, catalogs ...*catalog.Service) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
@@ -49,6 +54,9 @@ func NewAppRouter(check databaseCheck, service *auth.Service, webOrigin string, 
 			service.Mount(api)
 			if len(catalogs) > 0 && catalogs[0] != nil {
 				catalogs[0].Mount(api)
+			}
+			if customers != nil {
+				customers.Mount(api)
 			}
 		})
 	}

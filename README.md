@@ -6,12 +6,15 @@ Restaurant ordering and subscription platform using Go 1.27.3, Chi, PostgreSQL 1
 - Group 1: backend/frontend skeleton, Docker, health/readiness checks, CI.
 - Group 2: Google/Apple OAuth, opaque sessions, RBAC, audit events and security hardening.
 - Group 3: restaurants, categories, meals, modifiers, prices, availability, public menus and manager-scoped admin CRUD.
+- Group 4: customer profiles, owned delivery addresses, one-restaurant persisted cart, modifiers, live server prices and a cart UI.
 
 ## Run locally
 Run: docker compose up --build
 
 Frontend: http://localhost:3000
 Catalog editor: http://localhost:3000/admin/catalog
+Customer account: http://localhost:3000/account
+Cart: http://localhost:3000/cart
 API health: http://localhost:8080/healthz
 Database readiness: http://localhost:8080/readyz
 
@@ -25,3 +28,5 @@ CI uses Go 1.27.3 and Node.js 24. Go and npm dependencies are locked (go.sum and
 No deployment is automatically configured.
 
 Group 2 hardening includes database-backed OAuth start throttling, admin permission revalidation, durable session/role audit events and hourly credential pruning. See docs/auth.md.
+
+See docs/customer-cart.md for Group 4 API, pricing and ownership rules. Checkout is intentionally deferred to Group 5.

@@ -66,3 +66,20 @@ footer { border-top: 1px solid #283935; padding: 20px 0; color: #758980; font-si
 .editor-form { max-width: 510px; border-top: 1px solid #344b40; padding-top: 20px; }
 button.action { font: inherit; font-size: 13px; font-weight: 600; }
 @media (max-width:640px) { .catalog-header { padding: 36px 0 12px; } .panel { padding: 16px; } }
+
+/* Group 4 customer flows */
+.account-sections { width: min(100%,740px); }
+.account-address { display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:16px 0;border-bottom:1px solid #32453c; }
+.account-address p { margin:4px 0;font-size:13px; }
+.cart-actions { border-top:1px solid #34483f;margin-top:18px;padding-top:16px; }
+.cart-add-row { display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-top:12px; }
+.cart-add-row .form-field input { width:76px; }
+.modifier-options { margin:12px 0;border:1px solid #34483f;border-radius:8px;padding:12px; }
+.modifier-options legend { padding:0 6px; font-size:13px;font-weight:600; }
+.modifier-options .check-field { margin:7px 0; }
+.cart-title { display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap; }
+.cart-line { display:grid;grid-template-columns:minmax(180px,1fr) 85px auto auto;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid #34483f; }
+.cart-line-main { display:flex;flex-direction:column;gap:5px; }
+.cart-line .form-field input { max-width:80px; }
+.cart-total { display:flex;justify-content:space-between;gap:16px;font-size:19px;margin:20px 0; }
+@media(max-width:650px) {.cart-line {grid-template-columns:1fr 85px;}.cart-line .action {justify-self:start;}}

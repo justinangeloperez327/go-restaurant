@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.3.0
-  description: Authentication, RBAC, restaurants, menus and modifiers.
+  version: 0.4.0
+  description: Authentication, restaurant catalog, profiles, addresses and owned carts.
 servers:
   - url: http://localhost:8080
 paths:
@@ -212,6 +212,78 @@ paths:
       security: [{ CookieSession: [] }]
       responses:
         '201': { description: Modifier option ID }
+  /api/v1/me/profile:
+    get:
+      summary: Read own customer profile
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Customer profile }
+        '401': { description: Authentication required }
+    put:
+      summary: Update own profile
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Updated profile }
+  /api/v1/me/addresses:
+    get:
+      summary: List own delivery addresses
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Ordered owned addresses }
+    post:
+      summary: Create owned delivery address (max 15)
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Address created }
+  /api/v1/me/addresses/{addressID}:
+    put:
+      summary: Update owned delivery address
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: addressID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Address updated }
+    delete:
+      summary: Delete owned delivery address
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: addressID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Address deleted }
+  /api/v1/cart:
+    get:
+      summary: Read owned single-restaurant cart, repriced from published catalog
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Cart with validity and subtotal in minor units }
+    delete:
+      summary: Clear cart and release restaurant selection
+      security: [{ CookieSession: [] }]
+      responses:
+        '204': { description: Cart cleared }
+  /api/v1/cart/items:
+    post:
+      summary: Add meal and validated modifier selections to cart
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Cart item created }
+        '409': { description: Unavailable item, invalid options or cart is from another restaurant }
+  /api/v1/cart/items/{itemID}:
+    put:
+      summary: Replace cart item quantity
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: itemID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Updated quantity }
+        '404': { description: Item not found or not owned }
+    delete:
+      summary: Remove owned cart item
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: itemID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Item removed }
 components:
   securitySchemes:
     CookieSession:
