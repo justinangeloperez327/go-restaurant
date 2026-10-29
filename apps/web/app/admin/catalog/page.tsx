@@ -12,7 +12,6 @@ type Catalog = {
   modifier_groups: Item[];
   modifier_options: Item[];
 };
-type Kind = "categories" | "meals" | "groups" | "options";
 type Field = { key: string; title: string; type?: "number" | "checkbox" | "select" | "url"; options?: { value: string; text: string }[]; defaultValue?: string | number | boolean };
 const restaurantEmpty = { name: "", slug: "", description: "", currency: "AED", image_url: "", is_active: false };
 
@@ -47,8 +46,11 @@ export default function CatalogAdminPage() {
   }, [request]);
 
   useEffect(() => {
-    refreshRestaurants().catch((e: unknown) =>
-      setMessage(e instanceof Error ? e.message : "Sign in as a restaurant manager or administrator."));
+    async function load() {
+      try { await refreshRestaurants(); }
+      catch (e) { setMessage(e instanceof Error ? e.message : "Sign in as a restaurant manager or administrator."); }
+    }
+    void load();
   }, [refreshRestaurants]);
 
   const refreshCatalog = useCallback(async (id: string) => {
@@ -58,8 +60,11 @@ export default function CatalogAdminPage() {
   }, [request]);
 
   useEffect(() => {
-    refreshCatalog(restaurantID).catch((e: unknown) =>
-      setMessage(e instanceof Error ? e.message : "Unable to load catalog."));
+    async function load() {
+      try { await refreshCatalog(restaurantID); }
+      catch (e) { setMessage(e instanceof Error ? e.message : "Unable to load catalog."); }
+    }
+    void load();
   }, [restaurantID, refreshCatalog]);
 
   async function mutation(operation: () => Promise<void>) {
