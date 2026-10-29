@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: Go Restaurant API
+  version: 0.1.0
+  description: Group 1 foundation endpoints. Business routes are introduced in subsequent groups.
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      summary: Process liveness
+      responses:
+        "200":
+          description: Process responds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+  /readyz:
+    get:
+      summary: PostgreSQL readiness
+      responses:
+        "200":
+          description: PostgreSQL reachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+        "503":
+          description: PostgreSQL unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+components:
+  schemas:
+    Status:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+        database:
+          type: string

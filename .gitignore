@@ -1,0 +1,25 @@
+# Go
+/bin/
+*.test
+*.out
+/coverage/
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/out/
+**/.turbo/
+**/tsconfig.tsbuildinfo
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+# Misc
+*.log
