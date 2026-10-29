@@ -1,44 +1,162 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.1.0
-  description: Group 1 foundation endpoints. Business routes are introduced in subsequent groups.
+  version: 0.2.0
+  description: Group 2 authentication and role management.
 servers:
   - url: http://localhost:8080
 paths:
   /healthz:
     get:
-      summary: Process liveness
+      summary: API process liveness
       responses:
-        "200":
-          description: Process responds
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Status"
+        '200':
+          description: Process alive
   /readyz:
     get:
       summary: PostgreSQL readiness
       responses:
-        "200":
-          description: PostgreSQL reachable
+        '200':
+          description: Database reachable
+        '503':
+          description: Database unreachable
+  /api/v1/auth/providers:
+    get:
+      summary: Available configured OAuth providers
+      responses:
+        '200':
+          description: Providers list
+  /api/v1/auth/google/start:
+    get:
+      summary: Begin Google authorization-code login (PKCE)
+      responses:
+        '302':
+          description: Redirect to Google
+        '503':
+          description: Provider not configured
+  /api/v1/auth/google/callback:
+    get:
+      summary: Google OAuth callback
+      responses:
+        '303':
+          description: Session issued, redirect to frontend
+        '400':
+          description: Invalid or replayed login state
+  /api/v1/auth/apple/start:
+    get:
+      summary: Begin Apple authorization-code login
+      responses:
+        '302':
+          description: Redirect to Apple
+        '503':
+          description: Provider not configured
+  /api/v1/auth/apple/callback:
+    post:
+      summary: Apple OAuth form_post callback
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+                code:
+                  type: string
+      responses:
+        '303':
+          description: Session issued, redirect to frontend
+        '400':
+          description: Invalid or replayed login state
+  /api/v1/auth/logout:
+    post:
+      summary: Revoke current session
+      security:
+        - CookieSession: []
+      responses:
+        '204':
+          description: Session revoked
+        '403':
+          description: Origin not allowed
+  /api/v1/me:
+    get:
+      summary: Current authenticated user
+      security:
+        - CookieSession: []
+      responses:
+        '200':
+          description: Current user and roles
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Status"
-        "503":
-          description: PostgreSQL unavailable
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Status"
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Authentication required
+  /api/v1/admin/users:
+    get:
+      summary: List up to 100 users
+      security:
+        - CookieSession: []
+      responses:
+        '200':
+          description: User listing (requires users.read)
+        '403':
+          description: Missing required permission
+  /api/v1/admin/users/{userID}/roles:
+    put:
+      summary: Replace user's role assignments
+      security:
+        - CookieSession: []
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - roles
+              properties:
+                roles:
+                  type: array
+                  minItems: 1
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum: [customer, rider, restaurant_manager, admin]
+      responses:
+        '200':
+          description: Roles replaced (requires roles.manage)
+        '400':
+          description: Invalid role assignment
+        '403':
+          description: Missing permission or forbidden role change
 components:
+  securitySchemes:
+    CookieSession:
+      type: apiKey
+      in: cookie
+      name: gr_session
   schemas:
-    Status:
+    User:
       type: object
-      required: [status]
+      required: [id, email, display_name, roles]
       properties:
-        status:
+        id:
           type: string
-        database:
+          format: uuid
+        email:
           type: string
+        display_name:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string

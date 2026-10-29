@@ -11,6 +11,7 @@ import (
 )
 
 type contextKey struct{}
+
 func (s *Service) Mount(r chi.Router) {
 	r.Get("/auth/providers", s.providersList)
 	r.Get("/auth/google/start", func(w http.ResponseWriter, req *http.Request) { s.start(w, req, "google") })

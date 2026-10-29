@@ -44,8 +44,8 @@ func NewService(cfg config.Config, pool *pgxpool.Pool) (*Service, error) {
 				ClientID: cfg.Google.ClientID, ClientSecret: cfg.Google.ClientSecret,
 				RedirectURL: cfg.APIBaseURL + "/api/v1/auth/google/callback",
 				Endpoint: oauth2.Endpoint{
-					AuthURL: "https://accounts.google.com/o/oauth2/v2/auth",
-					TokenURL: "https://oauth2.googleapis.com/token",
+					AuthURL:   "https://accounts.google.com/o/oauth2/v2/auth",
+					TokenURL:  "https://oauth2.googleapis.com/token",
 					AuthStyle: oauth2.AuthStyleInParams,
 				},
 				Scopes: []string{"openid", "profile", "email"},
@@ -67,11 +67,11 @@ func NewService(cfg config.Config, pool *pgxpool.Pool) (*Service, error) {
 		s.providers["apple"] = provider{
 			apple: true,
 			config: oauth2.Config{
-				ClientID: cfg.Apple.ClientID,
+				ClientID:    cfg.Apple.ClientID,
 				RedirectURL: cfg.APIBaseURL + "/api/v1/auth/apple/callback",
 				Endpoint: oauth2.Endpoint{
-					AuthURL: "https://appleid.apple.com/auth/authorize",
-					TokenURL: "https://appleid.apple.com/auth/token",
+					AuthURL:   "https://appleid.apple.com/auth/authorize",
+					TokenURL:  "https://appleid.apple.com/auth/token",
 					AuthStyle: oauth2.AuthStyleInParams,
 				},
 				Scopes: []string{"name", "email"},
@@ -155,8 +155,8 @@ func (s *Service) appleSecret() (string, error) {
 	now := time.Now()
 	claims := jwt.RegisteredClaims{
 		Issuer: s.cfg.AppleTeamID, Subject: s.cfg.Apple.ClientID,
-		Audience: jwt.ClaimStrings{"https://appleid.apple.com"},
-		IssuedAt: jwt.NewNumericDate(now),
+		Audience:  jwt.ClaimStrings{"https://appleid.apple.com"},
+		IssuedAt:  jwt.NewNumericDate(now),
 		ExpiresAt: jwt.NewNumericDate(now.Add(5 * time.Minute)),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
@@ -240,9 +240,9 @@ func (s *Service) callback(w http.ResponseWriter, r *http.Request, name string) 
 		return
 	}
 	var claims struct {
-		Email string `json:"email"`
-		EmailVerified any `json:"email_verified"`
-		Name string `json:"name"`
+		Email         string `json:"email"`
+		EmailVerified any    `json:"email_verified"`
+		Name          string `json:"name"`
 	}
 	if err := idToken.Claims(&claims); err != nil {
 		errorResponse(w, http.StatusUnauthorized, "invalid identity claims")
@@ -255,7 +255,7 @@ func (s *Service) callback(w http.ResponseWriter, r *http.Request, name string) 
 		var profile struct {
 			Name struct {
 				First string `json:"firstName"`
-				Last string `json:"lastName"`
+				Last  string `json:"lastName"`
 			} `json:"name"`
 		}
 		if raw := r.Form.Get("user"); len(raw) < 8192 {

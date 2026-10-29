@@ -36,9 +36,9 @@ func Load() (Config, error) {
 		Google: OAuthProvider{
 			ClientID: os.Getenv("GOOGLE_CLIENT_ID"), ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		},
-		Apple: OAuthProvider{ClientID: os.Getenv("APPLE_CLIENT_ID")},
+		Apple:       OAuthProvider{ClientID: os.Getenv("APPLE_CLIENT_ID")},
 		AppleTeamID: os.Getenv("APPLE_TEAM_ID"),
-		AppleKeyID: os.Getenv("APPLE_KEY_ID"),
+		AppleKeyID:  os.Getenv("APPLE_KEY_ID"),
 		AppleKeyPEM: strings.ReplaceAll(os.Getenv("APPLE_PRIVATE_KEY_PEM"), `\n`, "\n"),
 	}
 	if cfg.Port == "" {

@@ -80,7 +80,7 @@ func TestPersistenceAndRBAC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer pool.Close()
+	t.Cleanup(func() { pool.Close() })
 	if err := db.Migrate(ctx, pool); err != nil {
 		t.Fatal(err)
 	}
