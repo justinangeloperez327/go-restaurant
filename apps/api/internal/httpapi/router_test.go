@@ -26,9 +26,9 @@ func TestHealth(t *testing.T) {
 
 func TestReadiness(t *testing.T) {
 	cases := []struct {
-		name    string
-		check   databaseCheck
-		want    int
+		name  string
+		check databaseCheck
+		want  int
 	}{
 		{"healthy database", func(context.Context) error { return nil }, http.StatusOK},
 		{"unavailable database", func(context.Context) error { return errors.New("unavailable") }, http.StatusServiceUnavailable},
