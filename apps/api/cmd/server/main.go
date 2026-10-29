@@ -15,6 +15,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/config"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/delivery"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/db"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
@@ -109,9 +110,10 @@ func main() {
 			}
 		}
 	}()
+	deliveryService := &delivery.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewSubscriptionsAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, subscriptionService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
+		Handler:           httpapi.NewDeliveryAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, subscriptionService, deliveryService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}

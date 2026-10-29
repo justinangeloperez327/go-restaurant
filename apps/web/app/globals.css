@@ -98,3 +98,18 @@ button.action { font: inherit; font-size: 13px; font-weight: 600; }
 .subscription-item .tag { margin-left:10px; }
 .subscription-item .muted { margin:8px 0; font-size:13px; }
 .subscription-history { padding:10px 0;border-bottom:1px solid #34483f; font-size:13px; }
+
+/* Group 7 delivery tracking and rider dispatch */
+.delivery-tracking { margin-top:18px; }
+.delivery-heading { display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap; }
+.delivery-steps { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:22px 0; }
+.delivery-step { display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;color:#839b8e;font-size:12px; }
+.delivery-step.done { color:#e6f0d2; }
+.delivery-step-number { width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid #43594e; }
+.delivery-step.done .delivery-step-number { background:#d5ef8f;color:#122315;border-color:#d5ef8f; }
+.delivery-location { border-top:1px solid #34483f;padding-top:12px; }
+.delivery-location p { font-size:13px; }
+.dispatch-order { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:18px 0;border-top:1px solid #34483f; }
+.dispatch-order p { margin:7px 0;font-size:13px; }
+.delivery-failure { border-top:1px solid #34483f;padding-top:16px;margin-top:16px;max-width:520px; }
+@media(max-width:600px){.delivery-steps{grid-template-columns:repeat(2,minmax(0,1fr));}.delivery-heading{align-items:flex-start;}}

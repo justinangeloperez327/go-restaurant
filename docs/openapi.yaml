@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.6.0
+  version: 0.7.0
   description: Authentication, restaurant catalog, profiles, addresses and owned carts.
 servers:
   - url: http://localhost:8080
@@ -384,6 +384,71 @@ paths:
       security: [{ CookieSession: [] }]
       responses:
         '200': { description: Delivery history }
+  /api/v1/orders/{orderID}/delivery:
+    get:
+      summary: Get customer's authorized delivery and latest active rider position
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Delivery state and active location }
+        '404': { description: No assignment or not owned }
+  /api/v1/deliveries/{deliveryID}:
+    get:
+      summary: Read delivery with owner, rider or scoped manager authorization
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Delivery snapshot }
+  /api/v1/deliveries/{deliveryID}/events:
+    get:
+      summary: Authenticated delivery event stream using Server-Sent Events
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: text/event-stream event notifications without coordinates }
+  /api/v1/rider/deliveries:
+    get:
+      summary: Active and historical assignments for authenticated rider
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Rider delivery list }
+  /api/v1/rider/deliveries/{deliveryID}/status:
+    put:
+      summary: Transition assigned to picked_up to en_route to delivered, or report failed
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Updated delivery }
+        '409': { description: Invalid state transition }
+  /api/v1/rider/deliveries/{deliveryID}/location:
+    put:
+      summary: Send rider opt-in location with validated precision and five-second throttle
+      security: [{ CookieSession: [] }]
+      responses:
+        '204': { description: Location saved }
+        '429': { description: Update rate limited }
+  /api/v1/admin/deliveries:
+    get:
+      summary: List deliveries scoped to managed restaurant
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Restaurant delivery jobs }
+  /api/v1/admin/deliveries/eligible-orders:
+    get:
+      summary: Find placed payment-eligible orders without delivery assignment
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Eligible orders }
+  /api/v1/admin/deliveries/riders:
+    get:
+      summary: List active riders for dispatch
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Active rider IDs and display names }
+  /api/v1/admin/deliveries/orders/{orderID}/assignment:
+    put:
+      summary: Assign or reassign an order to an active rider before pickup
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Assigned delivery }
+        '403': { description: Restaurant assignment access denied }
+        '409': { description: Order or delivery state conflict }
 components:
   securitySchemes:
     CookieSession:

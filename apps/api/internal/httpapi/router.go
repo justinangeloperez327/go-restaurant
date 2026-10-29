@@ -11,6 +11,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/delivery"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
@@ -38,6 +39,10 @@ func NewOrdersAppRouter(check databaseCheck, service *auth.Service, webOrigin st
 	return NewSubscriptionsAppRouter(check, service, webOrigin, customers, orderService, nil, catalogs...)
 }
 func NewSubscriptionsAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, orderService *orders.Service, subscriptionsService *subscriptions.Service, catalogs ...*catalog.Service) http.Handler {
+	return NewDeliveryAppRouter(check, service, webOrigin, customers, orderService, subscriptionsService, nil, catalogs...)
+}
+
+func NewDeliveryAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, orderService *orders.Service, subscriptionsService *subscriptions.Service, deliveryService *delivery.Service, catalogs ...*catalog.Service) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
@@ -72,6 +77,9 @@ func NewSubscriptionsAppRouter(check databaseCheck, service *auth.Service, webOr
 			if subscriptionsService != nil {
 				subscriptionsService.Mount(api)
 			}
+			if deliveryService != nil {
+				deliveryService.Mount(api)
+			}
 		})
 	}
 	return r
@@ -88,7 +96,7 @@ func cors(allowedOrigin string) func(http.Handler) http.Handler {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-				w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Idempotency-Key, Last-Event-ID")
 				if r.Method == http.MethodOptions {
 					w.WriteHeader(http.StatusNoContent)
 					return

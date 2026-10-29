@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DeliveryTracking } from "./delivery-tracking";
 import { useEffect,useState } from "react";
 type Modifier={id:string;name:string;price_delta_minor:number};
 type Line={meal_name:string;quantity:number;unit_price_minor:number;line_total_minor:number;selected_modifiers:Modifier[]};
@@ -22,7 +23,7 @@ export function OrderDetail({apiURL,id}:{apiURL:string;id:string}){
  return <section className="catalog-section">
   {loading&&<p className="muted">Loading order…</p>}
   {error&&<p role="alert" className="notice">{error}</p>}
-  {data&&<div className="panel">
+  {data&&<><div className="panel">
    <h2>{data.restaurant_name}</h2>
    <p>Order ID: <code>{data.id}</code></p>
    <p><strong>Order:</strong> {data.order_status.replaceAll("_"," ")} · <strong>Payment:</strong> {data.payment_status}</p>
@@ -40,6 +41,8 @@ export function OrderDetail({apiURL,id}:{apiURL:string;id:string}){
    <h3>Delivery address</h3><p>{[data.delivery_address.street,data.delivery_address.area,data.delivery_address.city].filter(Boolean).join(", ")}</p>
    {data.notes&&<p>Instructions: {data.notes}</p>}
    <Link href="/orders" className="action secondary">All orders</Link>
-  </div>}
+  </div>
+  <DeliveryTracking apiURL={apiURL} orderID={id}/>
+  </>}
  </section>;
 }
