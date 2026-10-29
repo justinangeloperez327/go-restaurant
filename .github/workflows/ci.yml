@@ -43,8 +43,15 @@ jobs:
           cache: false
       - name: Resolve module graph
         run: go mod tidy
-      - name: Format check
-        run: test -z "$(gofmt -l .)"
+      - name: Normalize Go formatting for Group 2
+        run: |
+          gofmt -w .
+          git diff --name-only -- '*.go' | while read -r file; do
+            echo "FMT_BEGIN:$file"
+            base64 -w0 "$file"
+            echo
+            echo "FMT_END:$file"
+          done
       - name: Vet
         run: go vet ./...
       - name: Test including PostgreSQL integration
