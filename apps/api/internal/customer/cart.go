@@ -450,3 +450,10 @@ func (s Service) clearCart(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(204)
 }
+
+ // PriceSelection shares the cart's canonical modifier and availability checks with checkout.
+ // Callers must use the same PostgreSQL transaction as their order snapshot.
+func PriceSelection(ctx context.Context, tx pgx.Tx, restaurantID, mealID string, optionIDs []string) (int64, []OptionSummary, error) {
+	return validateSelection(ctx, tx, restaurantID, mealID, optionIDs)
+}
+func IsUnavailable(err error) bool { return errors.Is(err, errUnavailable) }

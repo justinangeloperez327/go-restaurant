@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.4.0
+  version: 0.5.0
   description: Authentication, restaurant catalog, profiles, addresses and owned carts.
 servers:
   - url: http://localhost:8080
@@ -284,6 +284,51 @@ paths:
         - { name: itemID, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
         '204': { description: Item removed }
+  /api/v1/checkout/config:
+    get:
+      summary: Get allowed payment methods for the current customer
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Available COD and Stripe methods }
+  /api/v1/checkout/quote:
+    get:
+      summary: Price the live cart for one owned delivery address
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: address_id, in: query, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Snapshot-free quote in integer AED fils }
+        '409': { description: Cart contains unavailable items }
+  /api/v1/checkout:
+    post:
+      summary: Idempotently create order and start payment
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 12, maxLength: 128 } }
+      responses:
+        '200': { description: Order ID and optional hosted Checkout URL }
+        '409': { description: Cart changed or key conflict }
+  /api/v1/orders:
+    get:
+      summary: List own orders
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Last 50 owned orders }
+  /api/v1/orders/{orderID}:
+    get:
+      summary: Read owned immutable order snapshot and payment status
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: orderID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Order detail }
+        '404': { description: Not owned or not found }
+  /api/v1/webhooks/stripe:
+    post:
+      summary: Verify Stripe webhook HMAC, amount, and idempotent payment state transition
+      responses:
+        '204': { description: Event processed or ignored }
+        '400': { description: Invalid signature or payment data }
 components:
   securitySchemes:
     CookieSession:

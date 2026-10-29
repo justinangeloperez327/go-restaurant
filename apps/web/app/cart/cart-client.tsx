@@ -79,9 +79,13 @@ export function CartClient({ apiURL }: { apiURL: string }) {
           <button className="action secondary" disabled={busy} onClick={() => void mutate("/cart/items/" + item.id, "DELETE")}>Remove</button>
         </div>)}
         <div className="cart-total"><span>Estimated subtotal</span><strong>{money(cart.subtotal_minor)}</strong></div>
-        <p className="muted">Prices are recalculated from the live menu. Tax, delivery fees, and payment will be finalized during Group 5 checkout.</p>
-        <p className="muted">{cart.can_checkout ? "Your cart is ready for the upcoming checkout workflow." : "Some items need attention, or your cart is empty."}</p>
-        <Link className="action secondary" href={"/restaurants/" + cart.restaurant.id}>Continue shopping</Link>
+        <p className="muted">Prices are recalculated from the live menu. Your final taxes, delivery fee and total are shown at checkout and recalculated by the Go API.</p>
+        <p className="muted">{cart.can_checkout ? "Your cart is ready for checkout." : "Some items need attention, or your cart is empty."}</p>
+        <div className="record-actions">
+          <Link className="action secondary" href={"/restaurants/" + cart.restaurant.id}>Continue shopping</Link>
+          <Link className="action secondary" href="/orders">Order history</Link>
+          {cart.can_checkout && <Link className="action" href="/checkout">Proceed to checkout</Link>}
+        </div>
       </div> : <div className="panel"><h2>Your cart is empty</h2><p>Browse available meals and build your order.</p><Link className="action" href="/">Browse restaurants</Link></div>}
     </>}
   </section>;

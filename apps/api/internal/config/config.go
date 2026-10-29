@@ -25,6 +25,9 @@ type Config struct {
 	AppleTeamID   string
 	AppleKeyID    string
 	AppleKeyPEM   string
+	StripeSecretKey string
+	StripeWebhookSecret string
+	AllowCOD bool
 }
 
 func Load() (Config, error) {
@@ -40,6 +43,9 @@ func Load() (Config, error) {
 		AppleTeamID: os.Getenv("APPLE_TEAM_ID"),
 		AppleKeyID:  os.Getenv("APPLE_KEY_ID"),
 		AppleKeyPEM: strings.ReplaceAll(os.Getenv("APPLE_PRIVATE_KEY_PEM"), `\n`, "\n"),
+		StripeSecretKey: os.Getenv("STRIPE_SECRET_KEY"),
+		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
+		AllowCOD: os.Getenv("ALLOW_COD") == "true",
 	}
 	if cfg.Port == "" {
 		cfg.Port = "8080"
@@ -80,6 +86,9 @@ func Load() (Config, error) {
 	}
 	if anyApple && !cfg.SecureCookies {
 		return Config{}, errors.New("Sign in with Apple requires HTTPS API_PUBLIC_URL")
+	}
+	if (cfg.StripeSecretKey == "") != (cfg.StripeWebhookSecret == "") {
+		return Config{}, errors.New("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must both be set")
 	}
 	return cfg, nil
 }

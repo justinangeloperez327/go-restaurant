@@ -17,6 +17,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/db"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
 )
 
 func main() {
@@ -65,9 +66,29 @@ func main() {
 		}
 	}()
 
+	fee, err := orders.ParseNonNegative(os.Getenv("DELIVERY_FEE_MINOR"), 100000000)
+	if err != nil {
+		log.Error("invalid delivery fee configuration", "error", err)
+		os.Exit(1)
+	}
+	tax, err := orders.ParseNonNegative(os.Getenv("TAX_RATE_BPS"), 10000)
+	if err != nil {
+		log.Error("invalid tax configuration", "error", err)
+		os.Exit(1)
+	}
+	var stripe orders.StripeGateway
+	if cfg.StripeSecretKey != "" {
+		stripe = orders.StripeClient{SecretKey: cfg.StripeSecretKey, WebhookSecret: cfg.StripeWebhookSecret}
+	}
+	orderService := &orders.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin,
+		Stripe: stripe, AllowCOD: cfg.AllowCOD, TaxBPS: tax, DeliveryFeeMinor: fee}
+	if err := orderService.Validate(); err != nil {
+		log.Error("invalid checkout configuration", "error", err)
+		os.Exit(1)
+	}
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewCustomerAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
+		Handler:           httpapi.NewOrdersAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
