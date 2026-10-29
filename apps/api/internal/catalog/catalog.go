@@ -24,7 +24,7 @@ type Service struct {
 	WebOrigin string
 }
 
-var uuidRE = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+var uuidRE = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var slugRE = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 var currencyRE = regexp.MustCompile(`^[A-Z]{3}$`)
 
@@ -425,7 +425,7 @@ func (s Service) edit(kind, idPath string) http.HandlerFunc {
 		parent:=""
 		if sp.parentPath!="" { parent=chi.URLParam(r,sp.parentPath) }
 		if !validID(rid) || (idPath!="" && !validID(id)) || (sp.parentPath!="" && !validID(parent)) {
-			failure(w,400,fmt.Sprintf("invalid ID (restaurant=%q, record=%q, parent=%q)",rid,id,parent)); return
+			failure(w,400,"invalid ID"); return
 		}
 		input,ok := values(w,r,kind)
 		if !ok { failure(w,400,"invalid catalog details"); return }
