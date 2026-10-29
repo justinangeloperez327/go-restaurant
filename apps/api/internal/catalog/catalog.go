@@ -130,26 +130,18 @@ func (s Service) Mount(r chi.Router) {
 		r.Put("/{restaurantID}/managers/{userID}", s.assignManager)
 		r.Delete("/{restaurantID}/managers/{userID}", s.removeManager)
 
-		r.Route("/{restaurantID}/categories", func(r chi.Router) {
-			r.Post("/", s.edit("categories", ""))
-			r.Put("/{categoryID}", s.edit("categories", "categoryID"))
-			r.Delete("/{categoryID}", s.remove("categories", "categoryID"))
-		})
-		r.Route("/{restaurantID}/meals", func(r chi.Router) {
-			r.Post("/", s.edit("meals", ""))
-			r.Put("/{mealID}", s.edit("meals", "mealID"))
-			r.Delete("/{mealID}", s.remove("meals", "mealID"))
-			r.Route("/{mealID}/modifier-groups", func(r chi.Router) {
-				r.Post("/", s.edit("groups", ""))
-				r.Put("/{groupID}", s.edit("groups", "groupID"))
-				r.Delete("/{groupID}", s.remove("groups", "groupID"))
-				r.Route("/{groupID}/options", func(r chi.Router) {
-					r.Post("/", s.edit("options", ""))
-					r.Put("/{optionID}", s.edit("options", "optionID"))
-					r.Delete("/{optionID}", s.remove("options", "optionID"))
-				})
-			})
-		})
+		r.Post("/{restaurantID}/categories/", s.edit("categories", ""))
+		r.Put("/{restaurantID}/categories/{categoryID}", s.edit("categories", "categoryID"))
+		r.Delete("/{restaurantID}/categories/{categoryID}", s.remove("categories", "categoryID"))
+		r.Post("/{restaurantID}/meals/", s.edit("meals", ""))
+		r.Put("/{restaurantID}/meals/{mealID}", s.edit("meals", "mealID"))
+		r.Delete("/{restaurantID}/meals/{mealID}", s.remove("meals", "mealID"))
+		r.Post("/{restaurantID}/meals/{mealID}/modifier-groups/", s.edit("groups", ""))
+		r.Put("/{restaurantID}/meals/{mealID}/modifier-groups/{groupID}", s.edit("groups", "groupID"))
+		r.Delete("/{restaurantID}/meals/{mealID}/modifier-groups/{groupID}", s.remove("groups", "groupID"))
+		r.Post("/{restaurantID}/meals/{mealID}/modifier-groups/{groupID}/options/", s.edit("options", ""))
+		r.Put("/{restaurantID}/meals/{mealID}/modifier-groups/{groupID}/options/{optionID}", s.edit("options", "optionID"))
+		r.Delete("/{restaurantID}/meals/{mealID}/modifier-groups/{groupID}/options/{optionID}", s.remove("options", "optionID"))
 	})
 }
 func (s Service) mustWrite(w http.ResponseWriter, r *http.Request) bool {
