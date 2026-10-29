@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
 )
 
 type databaseCheck func(context.Context) error
@@ -23,7 +24,7 @@ func NewRouter(check databaseCheck) http.Handler {
 	return NewAppRouter(check, nil, "")
 }
 
-func NewAppRouter(check databaseCheck, service *auth.Service, webOrigin string) http.Handler {
+func NewAppRouter(check databaseCheck, service *auth.Service, webOrigin string, catalogs ...*catalog.Service) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
@@ -44,7 +45,12 @@ func NewAppRouter(check databaseCheck, service *auth.Service, webOrigin string) 
 		writeJSON(w, http.StatusOK, statusResponse{Status: "ready", Database: "up"})
 	})
 	if service != nil {
-		r.Route("/api/v1", service.Mount)
+		r.Route("/api/v1", func(api chi.Router) {
+			service.Mount(api)
+			if len(catalogs) > 0 && catalogs[0] != nil {
+				catalogs[0].Mount(api)
+			}
+		})
 	}
 	return r
 }
@@ -59,7 +65,7 @@ func cors(allowedOrigin string) func(http.Handler) http.Handler {
 			if allowedOrigin != "" && origin == allowedOrigin {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 				if r.Method == http.MethodOptions {
 					w.WriteHeader(http.StatusNoContent)

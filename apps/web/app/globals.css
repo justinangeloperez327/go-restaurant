@@ -30,3 +30,39 @@ p { color: #a3b5ae; font-size: 17px; line-height: 1.7; max-width: 600px; }
 .user-list small { color: #a3b5ae; }
 footer { border-top: 1px solid #283935; padding: 20px 0; color: #758980; font-size: 12px; }
 @media(max-width: 600px) { .container { padding: 20px; } .topbar { align-items: flex-start; } .tag { font-size: 10px; } }
+
+
+/* Group 3 — lean catalog and editor layouts. */
+.catalog-header { padding: 54px 0 24px; max-width: 760px; }
+.catalog-header h1 { font-size: clamp(35px, 5vw, 55px); margin: 14px 0; }
+.catalog-section { margin: 24px 0 70px; }
+.catalog-section h2, .panel h2 { margin: 0 0 20px; font-size: 22px; }
+.restaurant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.restaurant-card, .meal-card { text-decoration: none; color: inherit; background: #13201e; border: 1px solid #30433b; border-radius: 14px; overflow: hidden; }
+.restaurant-card:hover { border-color: #d5ef8f; }
+.restaurant-cover { min-height: 150px; background-color: #26392f; background-size: cover; background-position: center; }
+.restaurant-content { padding: 20px; }
+.restaurant-content strong { font-size: 17px; }
+.restaurant-content p { font-size: 14px; margin: 12px 0; }
+.meal-heading { display: flex; justify-content: space-between; gap: 12px; }
+.modifier { margin-top: 18px; border-top: 1px solid #36483f; padding-top: 12px; font-size: 13px; }
+.modifier > strong { display: block; font-size: 13px; }
+.option { display: flex; gap: 20px; justify-content: space-between; margin-top: 8px; }
+.admin-page { max-width: 1200px; }
+.admin-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(290px,1fr)); gap: 16px; }
+.panel { background: #15211e; border: 1px solid #31473e; border-radius: 12px; padding: 22px; margin-bottom: 20px; }
+.panel h3 { margin: 10px 0 12px; font-size: 16px; }
+.field-stack { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; color: #c3d5cb; font-size: 13px; }
+.form-field input, .form-field select, .form-field textarea { width: 100%; min-height: 42px; padding: 10px 12px; font: inherit; color: #e8efe9; background: #0d1715; border: 1px solid #43594e; border-radius: 8px; }
+.form-field textarea { min-height: 80px; }
+.check-field { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #c3d5cb; }
+.check-field input { accent-color: #d5ef8f; }
+.record-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(215px,1fr)); gap: 12px; margin-bottom: 18px; }
+.record { display: flex; flex-direction: column; gap: 10px; border: 1px solid #344b40; border-radius: 10px; padding: 14px; }
+.record .muted { font-size: 12px; }
+.record-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.catalog-editor { margin-top: 24px; }
+.editor-form { max-width: 510px; border-top: 1px solid #344b40; padding-top: 20px; }
+button.action { font: inherit; font-size: 13px; font-weight: 600; }
+@media (max-width:640px) { .catalog-header { padding: 36px 0 12px; } .panel { padding: 16px; } }

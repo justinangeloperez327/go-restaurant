@@ -1,45 +1,46 @@
+import Link from "next/link";
 import { AuthPanel } from "./auth-panel";
 
-type ApiState = "online" | "offline";
-
-async function getApiState(): Promise<ApiState> {
-  const baseUrl = process.env.API_INTERNAL_URL ?? "http://localhost:8080";
+type Restaurant = { id: string; name: string; slug: string; description: string; image_url: string; currency: string };
+async function apiState(): Promise<"online" | "offline"> {
   try {
-    const response = await fetch(new URL("/healthz", baseUrl), {
-      cache: "no-store",
-      signal: AbortSignal.timeout(3000),
+    const res = await fetch(new URL("/healthz", process.env.API_INTERNAL_URL ?? "http://localhost:8080"), {
+      cache: "no-store", signal: AbortSignal.timeout(3000),
     });
-    return response.ok ? "online" : "offline";
-  } catch {
-    return "offline";
-  }
+    return res.ok ? "online" : "offline";
+  } catch { return "offline"; }
 }
-
-export default async function HomePage() {
-  const api = await getApiState();
-  const apiURL = process.env.API_PUBLIC_URL ?? "http://localhost:8080";
-
-  return (
-    <main className="container">
-      <header className="topbar">
-        <div className="brand"><span className="brand-mark">G</span> Go Restaurant</div>
-        <span className="tag">Group 2 · Authentication and RBAC</span>
-      </header>
-      <section className="hero">
-        <span className="eyebrow">RESTAURANT PLATFORM</span>
-        <h1>Your meals, your schedule, one account.</h1>
-        <p>
-          Go, Next.js, and PostgreSQL power the platform. Google and Apple
-          sign-in, account sessions, and server-enforced roles are now available
-          when provider credentials are configured.
-        </p>
-        <div className="status">
-          <span className={api === "online" ? "dot online" : "dot offline"} aria-hidden="true" />
-          <span>Go API: <strong>{api}</strong></span>
-        </div>
-        <AuthPanel apiURL={apiURL} />
-      </section>
-      <footer>Go Restaurant · Authentication and RBAC foundation</footer>
-    </main>
-  );
+async function restaurants(): Promise<Restaurant[]> {
+  try {
+    const res = await fetch(new URL("/api/v1/restaurants", process.env.API_INTERNAL_URL ?? "http://localhost:8080"), {
+      cache: "no-store", signal: AbortSignal.timeout(3000),
+    });
+    return res.ok ? (await res.json()) as Restaurant[] : [];
+  } catch { return []; }
+}
+export default async function Home() {
+  const [api, locations] = await Promise.all([apiState(), restaurants()]);
+  return <main className="container">
+    <header className="topbar">
+      <div className="brand"><span className="brand-mark">G</span> Go Restaurant</div>
+      <Link href="/admin/catalog" className="action secondary">Restaurant admin</Link>
+    </header>
+    <section className="hero">
+      <span className="eyebrow">MEALS & SUBSCRIPTIONS</span>
+      <h1>Fresh meals, simple ordering.</h1>
+      <p>Explore published restaurant menus. Customer ordering and meal subscriptions are coming in the next development groups.</p>
+      <div className="status"><span className={api === "online" ? "dot online" : "dot offline"} aria-hidden="true" />
+        <span>Go API: <strong>{api}</strong></span></div>
+      <AuthPanel apiURL={process.env.API_PUBLIC_URL ?? "http://localhost:8080"} />
+    </section>
+    <section className="catalog-section">
+      <h2>Restaurants</h2>
+      {locations.length === 0 && <p className="muted">No restaurants are currently published.</p>}
+      <div className="restaurant-grid">{locations.map((r) => <Link href={"/restaurants/" + r.id} key={r.id} className="restaurant-card">
+        {r.image_url && <div className="restaurant-cover" style={{ backgroundImage: "url(" + JSON.stringify(r.image_url) + ")" }} />}
+        <div className="restaurant-content"><strong>{r.name}</strong><p>{r.description}</p><span className="muted">View menu · {r.currency}</span></div>
+      </Link>)}</div>
+    </section>
+    <footer>Go Restaurant · Group 3 catalog</footer>
+  </main>;
 }

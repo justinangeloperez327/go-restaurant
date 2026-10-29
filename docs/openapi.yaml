@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.2.0
-  description: Group 2 authentication and role management.
+  version: 0.3.0
+  description: Authentication, RBAC, restaurants, menus and modifiers.
 servers:
   - url: http://localhost:8080
 paths:
@@ -138,6 +138,80 @@ paths:
           description: Invalid role assignment
         '403':
           description: Missing permission or forbidden role change
+  /api/v1/restaurants:
+    get:
+      summary: List published restaurants
+      responses:
+        '200': { description: Public restaurant list }
+  /api/v1/restaurants/{restaurantID}/menu:
+    get:
+      summary: Public published menu with modifier options
+      parameters:
+        - { name: restaurantID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Restaurant catalog }
+        '404': { description: Restaurant missing or unpublished }
+  /api/v1/admin/restaurants/:
+    get:
+      summary: List restaurants visible to current administrator or manager
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Accessible restaurants }
+        '401': { description: Authentication required }
+    post:
+      summary: Create a restaurant (administrator only)
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Restaurant ID }
+        '403': { description: Permission denied }
+  /api/v1/admin/restaurants/{restaurantID}/catalog:
+    get:
+      summary: View complete restaurant catalog including drafts
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: restaurantID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Restaurant catalog }
+        '403': { description: Restaurant access denied }
+  /api/v1/admin/restaurants/{restaurantID}:
+    put:
+      summary: Replace restaurant profile, keeping its currency fixed
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: restaurantID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Updated }
+    delete:
+      summary: Archive restaurant (administrator only)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: restaurantID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Archived }
+  /api/v1/admin/restaurants/{restaurantID}/categories/:
+    post:
+      summary: Create menu category
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Category ID }
+  /api/v1/admin/restaurants/{restaurantID}/meals/:
+    post:
+      summary: Create meal priced in currency minor units
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Meal ID }
+  /api/v1/admin/restaurants/{restaurantID}/meals/{mealID}/modifier-groups/:
+    post:
+      summary: Create meal modifier group
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Modifier group ID }
+  /api/v1/admin/restaurants/{restaurantID}/meals/{mealID}/modifier-groups/{groupID}/options/:
+    post:
+      summary: Create modifier option
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Modifier option ID }
 components:
   securitySchemes:
     CookieSession:

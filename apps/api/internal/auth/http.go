@@ -136,3 +136,14 @@ func jsonResponse(w http.ResponseWriter, status int, value any) {
 func errorResponse(w http.ResponseWriter, status int, message string) {
 	jsonResponse(w, status, map[string]string{"error": strings.TrimSpace(message)})
 }
+
+ // Authenticated enforces a live session; catalog routes use the same middleware as admin routes.
+func (s *Service) Authenticated(next http.Handler) http.Handler {
+	return s.authenticated(next)
+}
+
+// UserFromContext retrieves a user already verified by Authenticated.
+func UserFromContext(ctx context.Context) (User, bool) {
+	u, ok := ctx.Value(contextKey{}).(User)
+	return u, ok
+}

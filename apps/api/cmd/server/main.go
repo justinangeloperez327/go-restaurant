@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/config"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/db"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
@@ -65,7 +66,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewAppRouter(pool.Ping, service, cfg.WebOrigin),
+		Handler:           httpapi.NewAppRouter(pool.Ping, service, cfg.WebOrigin, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
