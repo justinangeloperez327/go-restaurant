@@ -110,6 +110,8 @@ func (s Service) processOne(ctx context.Context,now time.Time)(bool,error){
  Scan(&subID,&userID,&restaurantID,&addressID,&clock,&day,&mask,&period,&renew,&maxTotal,&notes)
  if errors.Is(err,pgx.ErrNoRows){return false,nil}
  if err!=nil{return false,err}
+ day=dateOnly(day)
+ period=dateOnly(period)
  scheduled:=deliveryAt(day,clock)
  dateStr:=day.Format("2006-01-02")
  reason:=""

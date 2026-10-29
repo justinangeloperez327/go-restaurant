@@ -295,6 +295,10 @@ func (s Service) action(w http.ResponseWriter,r *http.Request,name string){
  Scan(&status,&mask,&clock,&next,&period,&renew)
  if errors.Is(err,pgx.ErrNoRows){fail(w,404,"subscription not found");return}
  if err!=nil{fail(w,503,"subscription database unavailable");return}
+ // PostgreSQL DATE scans represent a calendar date, not a UAE midnight instant.
+ // Normalize both sides before comparing weekly period boundaries.
+ next=dateOnly(next)
+ period=dateOnly(period)
  switch name {
  case "pause":
   if status!="active"{fail(w,409,"only active subscriptions can be paused");return}
