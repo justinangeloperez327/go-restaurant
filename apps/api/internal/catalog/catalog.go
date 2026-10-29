@@ -85,7 +85,7 @@ func postgresFailure(w http.ResponseWriter, err error) {
 		case "23505":
 			failure(w, http.StatusConflict, "record already exists")
 			return
-		case "23503":
+		case "23503", "23001":
 			failure(w, http.StatusConflict, "referenced record does not exist or is still in use")
 			return
 		case "23502", "23514", "22001":
