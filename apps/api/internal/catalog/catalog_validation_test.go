@@ -25,9 +25,13 @@ func TestUUIDValidation(t *testing.T) {
 
 func TestImageURLs(t *testing.T) {
 	for _, u := range []string{"", "https://cdn.example.com/meal.jpg", "https://images.example.org/x?a=1"} {
-		if !validImage(u) { t.Errorf("safe image URL rejected: %q",u) }
+		if !validImage(u) {
+			t.Errorf("safe image URL rejected: %q", u)
+		}
 	}
 	for _, u := range []string{"javascript:alert(1)", "http://example.org/a.png", "file:///etc/passwd", "https://user:pass@example.org/x", "ftp://example.org"} {
-		if validImage(u) { t.Errorf("unsafe image URL accepted: %q",u) }
+		if validImage(u) {
+			t.Errorf("unsafe image URL accepted: %q", u)
+		}
 	}
 }
