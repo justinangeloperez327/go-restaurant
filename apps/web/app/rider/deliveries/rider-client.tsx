@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback,useEffect,useRef,useState } from "react";
-import Link from "next/link";
 
 type Job={
  id:string;order_id:string;restaurant_name:string;status:string;
@@ -77,7 +76,7 @@ export function RiderClient({apiURL}:{apiURL:string}){
      });
      if(!result.ok){
       const b=(await result.json().catch(()=>({}))) as {error?:string};
-      if(result.status===409||result.status===403||result.status===404){stopSharing();}
+      if([401,403,404,409].includes(result.status)){stopSharing();}
       throw new Error(b.error||"GPS update failed.");
      }
      setNotice("GPS location shared with this delivery.");
@@ -112,7 +111,6 @@ export function RiderClient({apiURL}:{apiURL:string}){
      {active&&(sharingID===job.id?
       <button className="action secondary" onClick={stopSharing}>Stop GPS sharing</button>:
       <button className="action secondary" onClick={()=>startSharing(job)}>Share live GPS</button>)}
-     <Link href={"/orders/"+job.order_id}>Order details</Link>
     </div>
     {active&&<div className="field-stack delivery-failure">
      <label className="form-field">Delivery failure reason (if applicable)

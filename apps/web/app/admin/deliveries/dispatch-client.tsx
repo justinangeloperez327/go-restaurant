@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback,useEffect,useState } from "react";
-import Link from "next/link";
 
 type Restaurant={id:string;name:string};
 type Rider={id:string;name:string};
@@ -95,7 +94,7 @@ export function DispatchClient({apiURL}:{apiURL:string}){
     <div className="dispatch-orders">
      {eligible.map(o=><div className="dispatch-order" key={o.id}>
       <div>
-       <Link href={"/orders/"+o.id}><strong>Order {o.id.slice(0,8)}</strong></Link>
+       <strong>Order {o.id.slice(0,8)}</strong>
        <p className="muted">{o.payment_method.toUpperCase()} · {o.payment_status} · {new Date(o.created_at).toLocaleString()}</p>
        <p className="muted">{[o.address.street,o.address.area,o.address.city].filter(Boolean).join(", ")}</p>
       </div>
@@ -110,7 +109,6 @@ export function DispatchClient({apiURL}:{apiURL:string}){
      <div>
       <strong>Order {job.order_id.slice(0,8)}</strong>
       <p className="muted">Rider: {job.rider_name} · {job.status.replaceAll("_"," ")}</p>
-      <Link href={"/orders/"+job.order_id}>View order</Link>
      </div>
      {job.status==="assigned"&&<button className="action secondary"
       disabled={!riderID||busy||riderID===job.rider_id}
