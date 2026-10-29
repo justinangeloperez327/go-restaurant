@@ -40,7 +40,10 @@ export function RiderClient({apiURL}:{apiURL:string}){
  useEffect(()=>()=>{if(watchRef.current!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchRef.current);},[]);
  useEffect(()=>{
   const current=jobs.find(j=>j.id===sharingID);
-  if(sharingID&&(!current||!["assigned","picked_up","en_route"].includes(current.status)))stopSharing();
+  if(sharingID&&(!current||!["assigned","picked_up","en_route"].includes(current.status))){
+   const handle=window.setTimeout(()=>stopSharing(),0);
+   return ()=>window.clearTimeout(handle);
+  }
  },[jobs,sharingID,stopSharing]);
  async function changeStatus(job:Job,status:string){
   if(status==="failed"&&failureReason.trim().length<4){setError("Enter a failure reason (at least four characters).");return;}
