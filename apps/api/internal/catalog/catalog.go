@@ -160,6 +160,7 @@ type restaurantInput struct {
 	ImageURL    string `json:"image_url"`
 	IsActive    bool   `json:"is_active"`
 }
+
 func (p restaurantInput) valid() bool {
 	return validText(p.Name, 140) && len(p.Slug) <= 100 && slugRE.MatchString(p.Slug) &&
 		currencyRE.MatchString(p.Currency) && len([]rune(p.Description)) <= 3000 && validImage(p.ImageURL)
@@ -324,8 +325,14 @@ func (s Service) catalog(w http.ResponseWriter, r *http.Request, admin bool) {
 	}
 	if admin {
 		ok, err := s.canManage(r.Context(), rid, s.actor(r))
-		if err != nil { postgresFailure(w, err); return }
-		if !ok { failure(w, 403, "restaurant access denied"); return }
+		if err != nil {
+			postgresFailure(w, err)
+			return
+		}
+		if !ok {
+			failure(w, 403, "restaurant access denied")
+			return
+		}
 	}
 	data, err := s.getCatalog(r.Context(), rid, admin)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -341,7 +348,7 @@ func (s Service) catalog(w http.ResponseWriter, r *http.Request, admin bool) {
 	_, _ = w.Write(data)
 }
 func (s Service) getCatalog(ctx context.Context, rid string, admin bool) ([]byte, error) {
-	activeRestaurant,activeCategory,activeMeal,activeOption := "", "", "", ""
+	activeRestaurant, activeCategory, activeMeal, activeOption := "", "", "", ""
 	if !admin {
 		activeRestaurant = " AND r.is_active"
 		activeCategory = " AND c.is_active"
@@ -352,19 +359,19 @@ func (s Service) getCatalog(ctx context.Context, rid string, admin bool) ([]byte
 	query := `SELECT jsonb_build_object(
 		'restaurant', to_jsonb(r)-'created_at'-'updated_at',
 		'categories', COALESCE((SELECT jsonb_agg(to_jsonb(c)-'created_at' ORDER BY c.sort_order,c.id)
-		  FROM menu_categories c WHERE c.restaurant_id=r.id`+activeCategory+`),'[]'::jsonb),
+		  FROM menu_categories c WHERE c.restaurant_id=r.id` + activeCategory + `),'[]'::jsonb),
 		'meals', COALESCE((SELECT jsonb_agg(to_jsonb(m)-'created_at' ORDER BY m.sort_order,m.id)
 		  FROM meals m JOIN menu_categories c ON c.id=m.category_id
-		  WHERE m.restaurant_id=r.id`+activeMeal+activeCategory+`),'[]'::jsonb),
+		  WHERE m.restaurant_id=r.id` + activeMeal + activeCategory + `),'[]'::jsonb),
 		'modifier_groups', COALESCE((SELECT jsonb_agg(to_jsonb(g)-'created_at' ORDER BY g.sort_order,g.id)
 		  FROM modifier_groups g
 		  JOIN meals m ON m.id=g.meal_id JOIN menu_categories c ON c.id=m.category_id
-		  WHERE g.restaurant_id=r.id`+activeMeal+activeCategory+`),'[]'::jsonb),
+		  WHERE g.restaurant_id=r.id` + activeMeal + activeCategory + `),'[]'::jsonb),
 		'modifier_options', COALESCE((SELECT jsonb_agg(to_jsonb(o)-'created_at' ORDER BY o.sort_order,o.id)
 		  FROM modifier_options o JOIN modifier_groups g ON g.id=o.group_id
 		  JOIN meals m ON m.id=g.meal_id JOIN menu_categories c ON c.id=m.category_id
-		  WHERE o.restaurant_id=r.id`+activeMeal+activeCategory+activeOption+`),'[]'::jsonb)
-	  ) FROM restaurants r WHERE r.id=$1::uuid`+activeRestaurant
+		  WHERE o.restaurant_id=r.id` + activeMeal + activeCategory + activeOption + `),'[]'::jsonb)
+	  ) FROM restaurants r WHERE r.id=$1::uuid` + activeRestaurant
 	var output []byte
 	err := s.DB.QueryRow(ctx, query, rid).Scan(&output)
 	return output, err
@@ -372,112 +379,181 @@ func (s Service) getCatalog(ctx context.Context, rid string, admin bool) ([]byte
 
 type spec struct {
 	table, parentColumn, parentPath string
-	columns []string
+	columns                         []string
 }
+
 func resource(kind string) spec {
 	switch kind {
-	case "categories": return spec{table:"menu_categories", columns:[]string{"name","sort_order","is_active"}}
-	case "meals": return spec{table:"meals", columns:[]string{"category_id","name","description","price_minor","image_url","is_active","is_available","sort_order"}}
-	case "groups": return spec{table:"modifier_groups",parentColumn:"meal_id",parentPath:"mealID",columns:[]string{"name","min_select","max_select","sort_order"}}
-	case "options": return spec{table:"modifier_options",parentColumn:"group_id",parentPath:"groupID",columns:[]string{"name","price_delta_minor","is_available","sort_order"}}
-	default: panic("unknown internal catalog resource")
+	case "categories":
+		return spec{table: "menu_categories", columns: []string{"name", "sort_order", "is_active"}}
+	case "meals":
+		return spec{table: "meals", columns: []string{"category_id", "name", "description", "price_minor", "image_url", "is_active", "is_available", "sort_order"}}
+	case "groups":
+		return spec{table: "modifier_groups", parentColumn: "meal_id", parentPath: "mealID", columns: []string{"name", "min_select", "max_select", "sort_order"}}
+	case "options":
+		return spec{table: "modifier_options", parentColumn: "group_id", parentPath: "groupID", columns: []string{"name", "price_delta_minor", "is_available", "sort_order"}}
+	default:
+		panic("unknown internal catalog resource")
 	}
 }
-func values(w http.ResponseWriter, r *http.Request, kind string) ([]any,bool) {
+func values(w http.ResponseWriter, r *http.Request, kind string) ([]any, bool) {
 	switch kind {
 	case "categories":
-		var x struct { Name string `json:"name"`; SortOrder int `json:"sort_order"`; IsActive bool `json:"is_active"` }
-		if parse(w,r,&x)!=nil || !validText(x.Name,100) { return nil,false }
-		return []any{strings.TrimSpace(x.Name),x.SortOrder,x.IsActive},true
+		var x struct {
+			Name      string `json:"name"`
+			SortOrder int    `json:"sort_order"`
+			IsActive  bool   `json:"is_active"`
+		}
+		if parse(w, r, &x) != nil || !validText(x.Name, 100) {
+			return nil, false
+		}
+		return []any{strings.TrimSpace(x.Name), x.SortOrder, x.IsActive}, true
 	case "meals":
 		var x struct {
-			CategoryID string `json:"category_id"`
-			Name string `json:"name"`
+			CategoryID  string `json:"category_id"`
+			Name        string `json:"name"`
 			Description string `json:"description"`
-			PriceMinor int64 `json:"price_minor"`
-			ImageURL string `json:"image_url"`
-			IsActive bool `json:"is_active"`
-			IsAvailable bool `json:"is_available"`
-			SortOrder int `json:"sort_order"`
+			PriceMinor  int64  `json:"price_minor"`
+			ImageURL    string `json:"image_url"`
+			IsActive    bool   `json:"is_active"`
+			IsAvailable bool   `json:"is_available"`
+			SortOrder   int    `json:"sort_order"`
 		}
-		if parse(w,r,&x)!=nil || !validID(x.CategoryID) || !validText(x.Name,140) ||
-			len([]rune(x.Description))>3000 || x.PriceMinor<0 || x.PriceMinor>1000000000 || !validImage(x.ImageURL) {
-			return nil,false
+		if parse(w, r, &x) != nil || !validID(x.CategoryID) || !validText(x.Name, 140) ||
+			len([]rune(x.Description)) > 3000 || x.PriceMinor < 0 || x.PriceMinor > 1000000000 || !validImage(x.ImageURL) {
+			return nil, false
 		}
-		return []any{x.CategoryID,strings.TrimSpace(x.Name),x.Description,x.PriceMinor,x.ImageURL,x.IsActive,x.IsAvailable,x.SortOrder},true
+		return []any{x.CategoryID, strings.TrimSpace(x.Name), x.Description, x.PriceMinor, x.ImageURL, x.IsActive, x.IsAvailable, x.SortOrder}, true
 	case "groups":
-		var x struct { Name string `json:"name"`; Min int `json:"min_select"`; Max int `json:"max_select"`; SortOrder int `json:"sort_order"` }
-		if parse(w,r,&x)!=nil || !validText(x.Name,100) || x.Min<0 || x.Max<1 || x.Max>30 || x.Min>x.Max { return nil,false }
-		return []any{strings.TrimSpace(x.Name),x.Min,x.Max,x.SortOrder},true
+		var x struct {
+			Name      string `json:"name"`
+			Min       int    `json:"min_select"`
+			Max       int    `json:"max_select"`
+			SortOrder int    `json:"sort_order"`
+		}
+		if parse(w, r, &x) != nil || !validText(x.Name, 100) || x.Min < 0 || x.Max < 1 || x.Max > 30 || x.Min > x.Max {
+			return nil, false
+		}
+		return []any{strings.TrimSpace(x.Name), x.Min, x.Max, x.SortOrder}, true
 	case "options":
-		var x struct { Name string `json:"name"`; PriceDeltaMinor int64 `json:"price_delta_minor"`; IsAvailable bool `json:"is_available"`; SortOrder int `json:"sort_order"` }
-		if parse(w,r,&x)!=nil || !validText(x.Name,100) || x.PriceDeltaMinor<0 || x.PriceDeltaMinor>1000000000 { return nil,false }
-		return []any{strings.TrimSpace(x.Name),x.PriceDeltaMinor,x.IsAvailable,x.SortOrder},true
+		var x struct {
+			Name            string `json:"name"`
+			PriceDeltaMinor int64  `json:"price_delta_minor"`
+			IsAvailable     bool   `json:"is_available"`
+			SortOrder       int    `json:"sort_order"`
+		}
+		if parse(w, r, &x) != nil || !validText(x.Name, 100) || x.PriceDeltaMinor < 0 || x.PriceDeltaMinor > 1000000000 {
+			return nil, false
+		}
+		return []any{strings.TrimSpace(x.Name), x.PriceDeltaMinor, x.IsAvailable, x.SortOrder}, true
 	}
-	return nil,false
+	return nil, false
 }
 func (s Service) edit(kind, idPath string) http.HandlerFunc {
 	sp := resource(kind)
-	return func(w http.ResponseWriter,r *http.Request) {
-		if !s.mustWrite(w,r) { return }
-		rid, id := chi.URLParam(r,"restaurantID"), ""
-		if idPath!="" { id=chi.URLParam(r,idPath) }
-		parent:=""
-		if sp.parentPath!="" { parent=chi.URLParam(r,sp.parentPath) }
-		if !validID(rid) || (idPath!="" && !validID(id)) || (sp.parentPath!="" && !validID(parent)) {
-			failure(w,400,"invalid ID"); return
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !s.mustWrite(w, r) {
+			return
 		}
-		input,ok := values(w,r,kind)
-		if !ok { failure(w,400,"invalid catalog details"); return }
-		args:=[]any{rid,s.actor(r)}
-		if id!="" { args=append(args,id) }
-		if parent!="" { args=append(args,parent) }
+		rid, id := chi.URLParam(r, "restaurantID"), ""
+		if idPath != "" {
+			id = chi.URLParam(r, idPath)
+		}
+		parent := ""
+		if sp.parentPath != "" {
+			parent = chi.URLParam(r, sp.parentPath)
+		}
+		if !validID(rid) || (idPath != "" && !validID(id)) || (sp.parentPath != "" && !validID(parent)) {
+			failure(w, 400, "invalid ID")
+			return
+		}
+		input, ok := values(w, r, kind)
+		if !ok {
+			failure(w, 400, "invalid catalog details")
+			return
+		}
+		args := []any{rid, s.actor(r)}
+		if id != "" {
+			args = append(args, id)
+		}
+		if parent != "" {
+			args = append(args, parent)
+		}
 		columns := []string{"restaurant_id"}
 		params := []string{"$1::uuid"}
-		if parent!="" {
-			columns=append(columns,sp.parentColumn)
-			params=append(params,fmt.Sprintf("$%d::uuid",len(args)))
+		if parent != "" {
+			columns = append(columns, sp.parentColumn)
+			params = append(params, fmt.Sprintf("$%d::uuid", len(args)))
 		}
-		columns=append(columns,sp.columns...)
-		for _,v:=range input { args=append(args,v); params=append(params,fmt.Sprintf("$%d",len(args))) }
+		columns = append(columns, sp.columns...)
+		for _, v := range input {
+			args = append(args, v)
+			params = append(params, fmt.Sprintf("$%d", len(args)))
+		}
 		var query string
-		if id=="" {
-			query="INSERT INTO "+sp.table+" ("+strings.Join(columns,",")+") SELECT "+strings.Join(params,",")+" WHERE "+manageScope+" RETURNING id::text"
+		if id == "" {
+			query = "INSERT INTO " + sp.table + " (" + strings.Join(columns, ",") + ") SELECT " + strings.Join(params, ",") + " WHERE " + manageScope + " RETURNING id::text"
 		} else {
-			set:=[]string{}
+			set := []string{}
 			// Update only user-configurable columns, never restaurant or parent ownership.
-			for i,col:=range sp.columns {
-				index:=len(args)-len(input)+i+1
-				set=append(set,fmt.Sprintf("%s=$%d",col,index))
+			for i, col := range sp.columns {
+				index := len(args) - len(input) + i + 1
+				set = append(set, fmt.Sprintf("%s=$%d", col, index))
 			}
-			query="UPDATE "+sp.table+" x SET "+strings.Join(set,",")+" WHERE x.restaurant_id=$1::uuid AND x.id=$3::uuid"
-			if parent!="" { query+=fmt.Sprintf(" AND x.%s=$4::uuid",sp.parentColumn) }
-			query+=" AND "+manageScope+" RETURNING x.id::text"
+			query = "UPDATE " + sp.table + " x SET " + strings.Join(set, ",") + " WHERE x.restaurant_id=$1::uuid AND x.id=$3::uuid"
+			if parent != "" {
+				query += fmt.Sprintf(" AND x.%s=$4::uuid", sp.parentColumn)
+			}
+			query += " AND " + manageScope + " RETURNING x.id::text"
 		}
 		var saved string
-		err:=s.DB.QueryRow(r.Context(),query,args...).Scan(&saved)
-		if errors.Is(err,pgx.ErrNoRows) { failure(w,403,"catalog access denied");return }
-		if err!=nil { postgresFailure(w,err);return }
-		code:=http.StatusOK
-		if id=="" {code=http.StatusCreated}
-		respond(w,code,map[string]string{"id":saved})
+		err := s.DB.QueryRow(r.Context(), query, args...).Scan(&saved)
+		if errors.Is(err, pgx.ErrNoRows) {
+			failure(w, 403, "catalog access denied")
+			return
+		}
+		if err != nil {
+			postgresFailure(w, err)
+			return
+		}
+		code := http.StatusOK
+		if id == "" {
+			code = http.StatusCreated
+		}
+		respond(w, code, map[string]string{"id": saved})
 	}
 }
-func (s Service) remove(kind,idPath string) http.HandlerFunc {
-	sp:=resource(kind)
-	return func(w http.ResponseWriter,r *http.Request) {
-		if !s.mustWrite(w,r) { return }
-		rid,id:=chi.URLParam(r,"restaurantID"),chi.URLParam(r,idPath)
-		parent:=""
-		if sp.parentPath!="" { parent=chi.URLParam(r,sp.parentPath) }
-		if !validID(rid)||!validID(id)||(sp.parentPath!=""&&!validID(parent)) {failure(w,400,"invalid ID");return}
-		args:=[]any{rid,s.actor(r),id}
-		query:="DELETE FROM "+sp.table+" x WHERE x.restaurant_id=$1::uuid AND x.id=$3::uuid"
-		if parent!="" {args=append(args,parent);query+=" AND x."+sp.parentColumn+"=$4::uuid"}
-		query+=" AND "+manageScope
-		tag,err:=s.DB.Exec(r.Context(),query,args...)
-		if err!=nil {postgresFailure(w,err);return}
-		if tag.RowsAffected()==0 {failure(w,403,"catalog access denied or record not found");return}
+func (s Service) remove(kind, idPath string) http.HandlerFunc {
+	sp := resource(kind)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !s.mustWrite(w, r) {
+			return
+		}
+		rid, id := chi.URLParam(r, "restaurantID"), chi.URLParam(r, idPath)
+		parent := ""
+		if sp.parentPath != "" {
+			parent = chi.URLParam(r, sp.parentPath)
+		}
+		if !validID(rid) || !validID(id) || (sp.parentPath != "" && !validID(parent)) {
+			failure(w, 400, "invalid ID")
+			return
+		}
+		args := []any{rid, s.actor(r), id}
+		query := "DELETE FROM " + sp.table + " x WHERE x.restaurant_id=$1::uuid AND x.id=$3::uuid"
+		if parent != "" {
+			args = append(args, parent)
+			query += " AND x." + sp.parentColumn + "=$4::uuid"
+		}
+		query += " AND " + manageScope
+		tag, err := s.DB.Exec(r.Context(), query, args...)
+		if err != nil {
+			postgresFailure(w, err)
+			return
+		}
+		if tag.RowsAffected() == 0 {
+			failure(w, 403, "catalog access denied or record not found")
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

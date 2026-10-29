@@ -153,6 +153,10 @@ export default function CatalogAdminPage() {
               await request(root + "/managers/" + managerID, "PUT");
               setManagerID("");
             })}>Assign manager</button>
+            <button className="action secondary" disabled={busy || !managerID} onClick={() => void mutation(async () => {
+              await request(root + "/managers/" + managerID, "DELETE");
+              setManagerID("");
+            })}>Remove manager</button>
           </div>
         </div>}
       </section>
