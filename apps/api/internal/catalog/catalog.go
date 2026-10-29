@@ -425,7 +425,7 @@ func (s Service) edit(kind, idPath string) http.HandlerFunc {
 		parent:=""
 		if sp.parentPath!="" { parent=chi.URLParam(r,sp.parentPath) }
 		if !validID(rid) || (idPath!="" && !validID(id)) || (sp.parentPath!="" && !validID(parent)) {
-			failure(w,400,"invalid ID"); return
+			failure(w,400,fmt.Sprintf("invalid ID (restaurant=%q, record=%q, parent=%q)",rid,id,parent)); return
 		}
 		input,ok := values(w,r,kind)
 		if !ok { failure(w,400,"invalid catalog details"); return }
