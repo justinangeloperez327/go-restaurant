@@ -211,7 +211,7 @@ func (s Service) checkout(w http.ResponseWriter,r *http.Request){
  if err!=nil{fail(w,401,"account unavailable");return}
  var id,addr,method,notes,checkoutURL string
  var total int64
- err=tx.QueryRow(ctx,`SELECT id::text,COALESCE(address_id::text,''),payment_method,order_status,
+ err=tx.QueryRow(ctx,`SELECT id::text,COALESCE(address_id::text,''),payment_method,
  stripe_checkout_url,total_minor,notes FROM orders WHERE user_id=$1::uuid AND idempotency_key=$2`,userID,key).
  Scan(&id,&addr,&method,&checkoutURL,&total,&notes)
  if err==nil {
