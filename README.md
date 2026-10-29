@@ -16,8 +16,10 @@ Database readiness: http://localhost:8080/readyz
 To activate sign-in, copy .env.example to .env and supply provider credentials. See docs/auth.md for Google and Apple setup and first administrator bootstrap. Apple requires public HTTPS callbacks; localhost does not work for Apple sign-in.
 
 ## Test
-In apps/api run go test ./... (provide DATABASE_URL to enable PostgreSQL tests). In apps/web run npm install, npm run lint, npm run typecheck and npm run build.
+In apps/api run go test ./... (provide DATABASE_URL to enable PostgreSQL tests). In apps/web run npm ci, npm run lint, npm run typecheck and npm run build.
 
-CI uses Go 1.27.3 and Node.js 24. Add committed Go checksums and an npm lockfile before production deployment for reproducible dependencies.
+CI uses Go 1.27.3 and Node.js 24. Go and npm dependencies are locked (go.sum and package-lock.json); CI verifies Go module integrity and uses npm ci.
 
 No deployment is automatically configured.
+
+Group 2 hardening includes database-backed OAuth start throttling, admin permission revalidation, durable session/role audit events and hourly credential pruning. See docs/auth.md.

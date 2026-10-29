@@ -1,7 +1,7 @@
 FROM node:24-alpine AS build
 WORKDIR /app
-COPY apps/web/package.json ./
-RUN npm install --no-audit --no-fund
+COPY apps/web/package.json apps/web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
 COPY apps/web/ ./
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build

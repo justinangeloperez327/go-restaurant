@@ -71,12 +71,7 @@ jobs:
           node-version: '24'
           package-manager-cache: false
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Capture npm lockfile for reproducibility
-        run: |
-          echo "NPMLOCK_BEGIN"
-          base64 -w0 package-lock.json | fold -w 8000
-          echo "NPMLOCK_END"
+        run: npm ci --no-audit --no-fund
       - name: Lint
         run: npm run lint
       - name: Typecheck
