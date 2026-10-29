@@ -126,7 +126,8 @@ func TestCatalogLifecycleAndTenantIsolation(t *testing.T) {
 	optionPath:=groupPath+group+"/options/"
 	option:=f.do("POST",optionPath,f.managerToken,map[string]any{"name":"Brown rice","price_delta_minor":250,"is_available":true,"sort_order":0},201)["id"].(string)
 	if option=="" {t.Fatal("option ID missing")}
-	if status,_:=f.request("DELETE",root+"/categories/"+category,f.managerToken,nil,"http://localhost:3000");status!=409 {t.Fatalf("category deletion with meals must conflict: %d",status)}
+	if status,_:=f.request("DELETE",root+"/categories/"+category,f.managerToken,nil,"http://localhost:3000");status!=409 {_, directErr := f.pool.Exec(context.Background(), "DELETE FROM menu_categories WHERE id=$1::uuid", category)
+		t.Fatalf("category deletion with meals must conflict: status=%d direct=%v",status,directErr)}
 	code,menu:=f.request("GET","/api/v1/restaurants/"+a+"/menu","",nil,"")
 	if code!=200 {t.Fatalf("public menu: %d %v",code,menu)}
 	for _,key:=range []string{"categories","meals","modifier_groups","modifier_options"} {
