@@ -13,6 +13,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/delivery"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/operations"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
 
@@ -43,6 +44,9 @@ func NewSubscriptionsAppRouter(check databaseCheck, service *auth.Service, webOr
 }
 
 func NewDeliveryAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, orderService *orders.Service, subscriptionsService *subscriptions.Service, deliveryService *delivery.Service, catalogs ...*catalog.Service) http.Handler {
+	return NewOperationsAppRouter(check, service, webOrigin, customers, orderService, subscriptionsService, deliveryService, nil, catalogs...)
+}
+func NewOperationsAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, orderService *orders.Service, subscriptionsService *subscriptions.Service, deliveryService *delivery.Service, operationService *operations.Service, catalogs ...*catalog.Service) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
@@ -79,6 +83,9 @@ func NewDeliveryAppRouter(check databaseCheck, service *auth.Service, webOrigin 
 			}
 			if deliveryService != nil {
 				deliveryService.Mount(api)
+			}
+			if operationService != nil {
+				operationService.Mount(api)
 			}
 		})
 	}

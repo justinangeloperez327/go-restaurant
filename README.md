@@ -10,6 +10,7 @@ Restaurant ordering and subscription platform using Go 1.27.3, Chi, PostgreSQL 1
 - Group 5: checkout quotes, idempotent order snapshots, COD, Stripe-hosted payments, signed webhooks and order history.
 - Group 6: weekly meal subscriptions from the cart, schedule/cutoff, auto-renewal, skips, pauses, price caps and idempotent COD delivery orders.
 - Group 7: restaurant-scoped rider dispatch, secure delivery state transitions, GPS sharing, customer SSE tracking and rider management.
+- Group 8: restaurant-scoped operational dashboard, AED management reporting, daily CSV export, deduplicated in-app alerts and individual read state.
 
 ## Run locally
 Run: docker compose up --build
@@ -21,6 +22,7 @@ Cart: http://localhost:3000/cart
 Checkout: http://localhost:3000/checkout
 Orders: http://localhost:3000/orders
 Subscriptions: http://localhost:3000/subscriptions
+Operations: http://localhost:3000/admin/operations
 Dispatcher: http://localhost:3000/admin/deliveries
 Rider deliveries: http://localhost:3000/rider/deliveries
 Customer tracking: http://localhost:3000/orders/{orderID}
@@ -45,3 +47,5 @@ See docs/customer-cart.md for Group 4 API, pricing and ownership rules. Checkout
 See [docs/subscriptions.md](docs/subscriptions.md) for subscription scheduling, COD order generation, price ceilings, and renewal behavior.
 
 Group 7 implementation and security requirements: [docs/deliveries.md](docs/deliveries.md). HTTPS is required for browser geolocation outside localhost.
+
+Group 8 metric definitions and notifications: [docs/operations.md](docs/operations.md).

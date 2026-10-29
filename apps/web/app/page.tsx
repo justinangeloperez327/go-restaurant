@@ -29,6 +29,7 @@ export default async function Home() {
         <Link href="/orders" className="action secondary">My orders</Link>
         <Link href="/subscriptions" className="action secondary">Meal subscriptions</Link>
         <Link href="/admin/catalog" className="action secondary">Restaurant admin</Link>
+        <Link href="/admin/operations" className="action secondary">Operations</Link>
         <Link href="/admin/deliveries" className="action secondary">Dispatch</Link>
         <Link href="/rider/deliveries" className="action secondary">Rider portal</Link>
       </div>
@@ -49,6 +50,6 @@ export default async function Home() {
         <div className="restaurant-content"><strong>{r.name}</strong><p>{r.description}</p><span className="muted">View menu · {r.currency}</span></div>
       </Link>)}</div>
     </section>
-    <footer>Go Restaurant · Group 7 · Delivery and tracking</footer>
+    <footer>Go Restaurant · Group 8 · Management and reporting</footer>
   </main>;
 }

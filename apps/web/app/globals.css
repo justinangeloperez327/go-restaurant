@@ -113,3 +113,29 @@ button.action { font: inherit; font-size: 13px; font-weight: 600; }
 .dispatch-order p { margin:7px 0;font-size:13px; }
 .delivery-failure { border-top:1px solid #34483f;padding-top:16px;margin-top:16px;max-width:520px; }
 @media(max-width:600px){.delivery-steps{grid-template-columns:repeat(2,minmax(0,1fr));}.delivery-heading{align-items:flex-start;}}
+
+/* Group 8: compact operational reporting */
+.operations-layout{display:flex;flex-direction:column;gap:18px}
+.operations-filters{display:flex;align-items:end;gap:16px;flex-wrap:wrap}
+.operations-filters .form-field{flex:1;min-width:170px}
+.operations-headline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.operations-headline h2{margin:6px 0}
+.operations-headline p{margin:5px 0}
+.operations-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.operations-metric{border:1px solid #32433d;border-radius:10px;background:#14201e;padding:18px;display:flex;flex-direction:column;gap:10px}
+.operations-metric strong{font-size:23px;font-variant-numeric:tabular-nums}
+.operations-metric small{font-size:12px}
+.operations-bars{display:flex;flex-direction:column;gap:10px;margin:22px 0}
+.operations-bar-row{display:grid;grid-template-columns:52px minmax(60px,1fr) 125px;gap:14px;align-items:center;font-size:12px}
+.operations-bar-row strong{text-align:right;font-variant-numeric:tabular-nums}
+.operations-bar-track{background:#273b33;height:12px;border-radius:4px;overflow:hidden}
+.operations-bar-track>div{height:100%;background:#b5d67d}
+.operations-table-wrap{width:100%;overflow-x:auto}
+.operations-table{width:100%;border-collapse:collapse;white-space:nowrap;text-align:left;font-size:13px}
+.operations-table th,.operations-table td{padding:13px 10px;border-bottom:1px solid #32453b}
+.operations-table td:not(:first-child){font-variant-numeric:tabular-nums}
+.operations-alert{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;border-top:1px solid #32453b}
+.operations-alert>div{display:flex;flex-direction:column;gap:6px}
+.operations-alert strong{font-size:14px}
+.operations-alert.is-read{opacity:.65}
+@media(max-width:600px){.operations-bar-row{grid-template-columns:48px minmax(50px,1fr) 95px;gap:8px}.operations-metric strong{font-size:20px}}

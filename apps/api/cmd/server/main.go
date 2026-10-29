@@ -19,6 +19,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/delivery"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/operations"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
 
@@ -111,9 +112,25 @@ func main() {
 		}
 	}()
 	deliveryService := &delivery.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}
+	operationService := &operations.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for {
+			runCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			if _, err := operationService.SyncAlerts(runCtx); err != nil {
+				log.Warn("operation notification synchronization failed", "error", err)
+			}
+			cancel()
+			select {
+			case <-ctx.Done(): return
+			case <-ticker.C:
+			}
+		}
+	}()
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewDeliveryAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, subscriptionService, deliveryService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
+		Handler:           httpapi.NewOperationsAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, subscriptionService, deliveryService, operationService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}

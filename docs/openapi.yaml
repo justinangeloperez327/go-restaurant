@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.7.0
+  version: 0.8.0
   description: Authentication, restaurant catalog, profiles, addresses and owned carts.
 servers:
   - url: http://localhost:8080
@@ -449,6 +449,34 @@ paths:
         '200': { description: Assigned delivery }
         '403': { description: Restaurant assignment access denied }
         '409': { description: Order or delivery state conflict }
+  /api/v1/admin/operations/report:
+    get:
+      summary: Restaurant-scoped metrics and daily AED reporting for up to 90 days
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Operations metrics and date-grouped booked/paid/COD amounts }
+        '403': { description: Restaurant access denied }
+  /api/v1/admin/operations/report.csv:
+    get:
+      summary: CSV export of daily AED operational metrics
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: CSV with integer fils, UAE-local dates }
+  /api/v1/admin/operations/alerts:
+    get:
+      summary: Restaurant-scoped operational alert inbox with per-manager unread count
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Last 100 alerts and user-specific read receipts }
+  /api/v1/admin/operations/alerts/{alertID}/read:
+    put:
+      summary: Mark an authorized operational alert read for the current manager
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: alertID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Alert read receipt saved idempotently }
+        '404': { description: Alert not found in selected restaurant }
 components:
   securitySchemes:
     CookieSession:
