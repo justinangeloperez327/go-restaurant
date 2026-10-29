@@ -47,15 +47,8 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code -- go.mod go.sum
-      - name: Format Group 4 Go code for CI inspection
-        run: |
-          gofmt -w .
-          git diff --name-only -- '*.go' | while read -r file; do
-            echo "FMT_BEGIN:$file"
-            base64 -w0 "../../$file"
-            echo
-            echo "FMT_END:$file"
-          done
+      - name: Format check
+        run: test -z "$(gofmt -l .)"
       - name: Vet
         run: go vet ./...
       - name: Test including PostgreSQL integration
