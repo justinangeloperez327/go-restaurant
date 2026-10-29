@@ -15,19 +15,19 @@ type OAuthProvider struct {
 }
 
 type Config struct {
-	Port          string
-	DatabaseURL   string
-	APIBaseURL    string
-	WebOrigin     string
-	SecureCookies bool
-	Google        OAuthProvider
-	Apple         OAuthProvider
-	AppleTeamID   string
-	AppleKeyID    string
-	AppleKeyPEM   string
-	StripeSecretKey string
+	Port                string
+	DatabaseURL         string
+	APIBaseURL          string
+	WebOrigin           string
+	SecureCookies       bool
+	Google              OAuthProvider
+	Apple               OAuthProvider
+	AppleTeamID         string
+	AppleKeyID          string
+	AppleKeyPEM         string
+	StripeSecretKey     string
 	StripeWebhookSecret string
-	AllowCOD bool
+	AllowCOD            bool
 }
 
 func Load() (Config, error) {
@@ -39,13 +39,13 @@ func Load() (Config, error) {
 		Google: OAuthProvider{
 			ClientID: os.Getenv("GOOGLE_CLIENT_ID"), ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		},
-		Apple:       OAuthProvider{ClientID: os.Getenv("APPLE_CLIENT_ID")},
-		AppleTeamID: os.Getenv("APPLE_TEAM_ID"),
-		AppleKeyID:  os.Getenv("APPLE_KEY_ID"),
-		AppleKeyPEM: strings.ReplaceAll(os.Getenv("APPLE_PRIVATE_KEY_PEM"), `\n`, "\n"),
-		StripeSecretKey: os.Getenv("STRIPE_SECRET_KEY"),
+		Apple:               OAuthProvider{ClientID: os.Getenv("APPLE_CLIENT_ID")},
+		AppleTeamID:         os.Getenv("APPLE_TEAM_ID"),
+		AppleKeyID:          os.Getenv("APPLE_KEY_ID"),
+		AppleKeyPEM:         strings.ReplaceAll(os.Getenv("APPLE_PRIVATE_KEY_PEM"), `\n`, "\n"),
+		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
-		AllowCOD: os.Getenv("ALLOW_COD") == "true",
+		AllowCOD:            os.Getenv("ALLOW_COD") == "true",
 	}
 	if cfg.Port == "" {
 		cfg.Port = "8080"
