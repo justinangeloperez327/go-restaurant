@@ -89,3 +89,12 @@ button.action { font: inherit; font-size: 13px; font-weight: 600; }
 .order-link:hover { border-color: #d5ef8f; }
 .order-link p { font-size:13px;margin:4px 0; }
 .account-sections .check-field { padding:8px 0; }
+
+/* Group 6 subscriptions */
+.subscription-layout { flex: 1; }
+.subscription-layout .admin-grid { grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); }
+.weekday-selector { display:flex;flex-wrap:wrap;gap:12px; }
+.subscription-item { padding:16px 0;border-bottom:1px solid #36483f; }
+.subscription-item .tag { margin-left:10px; }
+.subscription-item .muted { margin:8px 0; font-size:13px; }
+.subscription-history { padding:10px 0;border-bottom:1px solid #34483f; font-size:13px; }

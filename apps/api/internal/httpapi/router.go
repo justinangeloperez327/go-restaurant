@@ -12,6 +12,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
 
 type databaseCheck func(context.Context) error
@@ -34,6 +35,9 @@ func NewCustomerAppRouter(check databaseCheck, service *auth.Service, webOrigin 
 	return NewOrdersAppRouter(check, service, webOrigin, customers, nil, catalogs...)
 }
 func NewOrdersAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, orderService *orders.Service, catalogs ...*catalog.Service) http.Handler {
+	return NewSubscriptionsAppRouter(check, service, webOrigin, customers, orderService, nil, catalogs...)
+}
+func NewSubscriptionsAppRouter(check databaseCheck, service *auth.Service, webOrigin string, customers *customer.Service, orderService *orders.Service, subscriptionsService *subscriptions.Service, catalogs ...*catalog.Service) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
@@ -64,6 +68,9 @@ func NewOrdersAppRouter(check databaseCheck, service *auth.Service, webOrigin st
 			}
 			if orderService != nil {
 				orderService.Mount(api)
+			}
+			if subscriptionsService != nil {
+				subscriptionsService.Mount(api)
 			}
 		})
 	}

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Go Restaurant API
-  version: 0.5.0
+  version: 0.6.0
   description: Authentication, restaurant catalog, profiles, addresses and owned carts.
 servers:
   - url: http://localhost:8080
@@ -329,6 +329,61 @@ paths:
       responses:
         '204': { description: Event processed or ignored }
         '400': { description: Invalid signature or payment data }
+  /api/v1/subscriptions:
+    get:
+      summary: List customer's meal subscriptions
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Owned subscriptions }
+    post:
+      summary: Create a COD weekly meal subscription from the current cart
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Subscription created }
+        '409': { description: Cart or selected price ceiling invalid }
+  /api/v1/subscriptions/{subscriptionID}:
+    get:
+      summary: Read owned subscription
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: subscriptionID, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Subscription configuration and status }
+    put:
+      summary: Change automatic weekly renewal and price ceiling
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Settings changed }
+  /api/v1/subscriptions/{subscriptionID}/pause:
+    post:
+      summary: Pause future generation
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Paused }
+  /api/v1/subscriptions/{subscriptionID}/resume:
+    post:
+      summary: Resume with future cutoff-safe delivery date
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Resumed or ended }
+  /api/v1/subscriptions/{subscriptionID}/cancel:
+    post:
+      summary: Cancel future recurring deliveries
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Cancelled }
+  /api/v1/subscriptions/{subscriptionID}/skips:
+    post:
+      summary: Skip a scheduled delivery at least 24 hours ahead
+      security: [{ CookieSession: [] }]
+      responses:
+        '201': { description: Skip requested }
+  /api/v1/subscriptions/{subscriptionID}/occurrences:
+    get:
+      summary: Last 100 created, skipped or failed delivery attempts
+      security: [{ CookieSession: [] }]
+      responses:
+        '200': { description: Delivery history }
 components:
   securitySchemes:
     CookieSession:

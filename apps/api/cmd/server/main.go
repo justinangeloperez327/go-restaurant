@@ -18,6 +18,7 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/db"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
 
 func main() {
@@ -86,9 +87,31 @@ func main() {
 		log.Error("invalid checkout configuration", "error", err)
 		os.Exit(1)
 	}
+	subscriptionService := &subscriptions.Service{
+		DB: pool, Auth: service, WebOrigin: cfg.WebOrigin,
+		AllowCOD: cfg.AllowCOD, TaxBPS: tax, DeliveryFeeMinor: fee,
+	}
+	// A bounded, replica-safe poller. PostgreSQL SKIP LOCKED coordinates multiple instances.
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				workCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
+				_, err := subscriptionService.RunDue(workCtx, time.Now(), 50)
+				cancel()
+				if err != nil {
+					log.Warn("subscription delivery generation failed", "error", err)
+				}
+			}
+		}
+	}()
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewOrdersAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
+		Handler:           httpapi.NewSubscriptionsAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, subscriptionService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
