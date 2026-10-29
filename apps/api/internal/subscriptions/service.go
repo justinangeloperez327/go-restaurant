@@ -1,7 +1,6 @@
 package subscriptions
 
 import (
- "context"
  "encoding/json"
  "errors"
  "io"
@@ -14,7 +13,6 @@ import (
  "github.com/jackc/pgx/v5"
  "github.com/jackc/pgx/v5/pgxpool"
  "github.com/justinangeloperez327/go-restaurant/apps/api/internal/auth"
- "github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
 )
 
 const cutoff = 24*time.Hour
