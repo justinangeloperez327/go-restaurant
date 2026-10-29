@@ -12,8 +12,8 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/catalog"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/customer"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/delivery"
-	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/operations"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
 

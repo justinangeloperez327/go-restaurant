@@ -18,8 +18,8 @@ import (
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/db"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/delivery"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/httpapi"
-	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/operations"
+	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/orders"
 	"github.com/justinangeloperez327/go-restaurant/apps/api/internal/subscriptions"
 )
 
@@ -123,7 +123,8 @@ func main() {
 			}
 			cancel()
 			select {
-			case <-ctx.Done(): return
+			case <-ctx.Done():
+				return
 			case <-ticker.C:
 			}
 		}
