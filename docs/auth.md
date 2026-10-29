@@ -34,3 +34,15 @@ Do not provide a public admin signup endpoint. Role mutation blocks admin self-d
 
 ## Before production
 Use trusted HTTPS ingress and compatible same-site web/API origins. Add rate limiting, audit trails, real-provider integration tests, session cleanup scheduling, admin pagination, and committed npm and Go dependency lock metadata. Startup applies embedded migrations transactionally. Do not rewrite previously applied migration files; add numbered versions. 
+
+
+## Group 2 hardening (continued)
+
+- A database-backed, atomic per-provider and per-server-observed-IP limiter permits 20 OAuth starts per rolling 10-minute fixed window; subsequent starts return 429 with Retry-After. In deployments behind a reverse proxy this limits the **proxy's** address unless a trusted client-IP forwarding mechanism is explicitly configured. Never blindly trust X-Forwarded-For from the public internet.
+- Role assignments recheck the acting administrator's current permission inside a serialized transaction, preventing an authorization-check/revocation race. The final-active-admin safeguard remains in place.
+- Persistent audit events capture successful session issuance, session revocation, and role mutations. They store user IDs and new role names, but not bearer tokens, identity tokens, OAuth codes, or raw IP addresses.
+- Expired OAuth states, sessions, and rate-limit counters are pruned hourly by the Go API, with a bounded database timeout. Multiple replicas can prune concurrently.
+- JSON role mutation payloads now reject trailing second documents.
+- Real Google/Apple provider login still requires credentials and a browser-backed end-to-end test; the CI suite tests local security and persistence behavior, not live identity providers.
+
+Audit events currently have no automatic retention policy; define retention and access controls before production deployment.

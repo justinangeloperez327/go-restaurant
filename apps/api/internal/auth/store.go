@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -95,14 +96,42 @@ func (s Store) ResolveIdentity(ctx context.Context, provider, subject, email, na
 }
 
 func (s Store) NewSession(ctx context.Context, userID, rawToken string) error {
-	_, err := s.DB.Exec(ctx, `INSERT INTO sessions (token_hash,user_id,expires_at)
-		VALUES ($1,$2::uuid,now() + interval '7 days')`, digest(rawToken), userID)
-	return err
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if _, err = tx.Exec(ctx, `INSERT INTO sessions (token_hash,user_id,expires_at)
+		VALUES ($1,$2::uuid,now() + interval '7 days')`, digest(rawToken), userID); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO auth_audit_events (event_type, actor_user_id)
+		VALUES ('login.succeeded', $1::uuid)`, userID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s Store) DeleteSession(ctx context.Context, token string) error {
-	_, err := s.DB.Exec(ctx, "DELETE FROM sessions WHERE token_hash=$1", digest(token))
-	return err
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var userID string
+	err = tx.QueryRow(ctx, `DELETE FROM sessions WHERE token_hash=$1
+		RETURNING user_id::text`, digest(token)).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO auth_audit_events (event_type, actor_user_id)
+		VALUES ('session.revoked', $1::uuid)`, userID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s Store) SessionUser(ctx context.Context, token string) (User, error) {
@@ -185,6 +214,21 @@ func (s Store) ReplaceRoles(ctx context.Context, actorID, targetID string, roles
 	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(87163220)"); err != nil {
 		return err
 	}
+	// Revalidate the actor inside the same serialized transaction. A previous
+	// authorization middleware check may have raced with administrator revocation.
+	var authorized bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS (
+		SELECT 1 FROM users u
+		JOIN user_roles ur ON ur.user_id=u.id
+		JOIN role_permissions rp ON rp.role_name=ur.role_name
+		WHERE u.id=$1::uuid AND u.is_active AND rp.permission_name='roles.manage'
+	)`, actorID).Scan(&authorized)
+	if err != nil {
+		return err
+	}
+	if !authorized {
+		return ErrForbidden
+	}
 	var active bool
 	err = tx.QueryRow(ctx, "SELECT is_active FROM users WHERE id=$1::uuid FOR UPDATE", targetID).Scan(&active)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -213,6 +257,16 @@ func (s Store) ReplaceRoles(ctx context.Context, actorID, targetID string, roles
 	if count == 0 {
 		return ErrForbidden
 	}
+	details, err := json.Marshal(map[string]any{"roles": roles})
+	if err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO auth_audit_events
+		(event_type, actor_user_id, target_user_id, details)
+		VALUES ('roles.updated', $1::uuid, $2::uuid, $3::jsonb)`,
+		actorID, targetID, details); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
 
@@ -223,6 +277,9 @@ func (s Store) Prune(ctx context.Context) error {
 	if _, err := s.DB.Exec(ctx, "DELETE FROM oauth_flows WHERE expires_at < now()"); err != nil {
 		return err
 	}
-	_, err := s.DB.Exec(ctx, "DELETE FROM sessions WHERE expires_at < now()")
+	if _, err := s.DB.Exec(ctx, "DELETE FROM sessions WHERE expires_at < now()"); err != nil {
+		return err
+	}
+	_, err := s.DB.Exec(ctx, "DELETE FROM auth_rate_limits WHERE reset_at < now()")
 	return err
 }

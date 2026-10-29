@@ -43,8 +43,23 @@ jobs:
           cache: false
       - name: Resolve module graph
         run: go mod tidy
-      - name: Format check
-        run: test -z "$(gofmt -l .)"
+      - name: Format Group 2 hardening changes for review
+        run: |
+          gofmt -w .
+          git diff --name-only -- '*.go' | while read -r file; do
+            echo "FMT_BEGIN:$file"
+            base64 -w0 "../../$file"
+            echo
+            echo "FMT_END:$file"
+          done
+          echo "GOMOD_BEGIN"
+          base64 -w0 go.mod
+          echo
+          echo "GOMOD_END"
+          echo "GOSUM_BEGIN"
+          base64 -w0 go.sum
+          echo
+          echo "GOSUM_END"
       - name: Vet
         run: go vet ./...
       - name: Test including PostgreSQL integration

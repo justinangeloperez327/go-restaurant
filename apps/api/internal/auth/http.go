@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 
@@ -90,7 +91,7 @@ func (s *Service) roles(w http.ResponseWriter, r *http.Request) {
 	}
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	if decoder.Decode(&request) != nil {
+	if decoder.Decode(&request) != nil || decoder.Decode(&struct{}{}) != io.EOF {
 		errorResponse(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}

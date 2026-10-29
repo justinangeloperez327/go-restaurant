@@ -47,6 +47,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Safe across multiple replicas: every cleanup deletes only expired rows.
+	go func() {
+		ticker := time.NewTicker(time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := (auth.Store{DB: pool}).Prune(ctx); err != nil {
+					log.Warn("authentication cleanup failed", "error", err)
+				}
+			}
+		}
+	}()
+
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           httpapi.NewAppRouter(pool.Ping, service, cfg.WebOrigin),

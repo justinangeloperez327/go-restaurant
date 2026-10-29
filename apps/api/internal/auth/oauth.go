@@ -123,6 +123,16 @@ func (s *Service) start(w http.ResponseWriter, r *http.Request, name string) {
 		errorResponse(w, http.StatusServiceUnavailable, "provider not configured")
 		return
 	}
+	allowed, err := s.store.AllowLoginStart(r.Context(), name, r.RemoteAddr)
+	if err != nil {
+		errorResponse(w, http.StatusServiceUnavailable, "sign-in temporarily unavailable")
+		return
+	}
+	if !allowed {
+		w.Header().Set("Retry-After", "600")
+		errorResponse(w, http.StatusTooManyRequests, "too many sign-in attempts")
+		return
+	}
 	state, err := randomString()
 	if err != nil {
 		errorResponse(w, http.StatusInternalServerError, "could not start login")
