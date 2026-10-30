@@ -49,7 +49,9 @@ func Load() (Config, error) {
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
 		AllowCOD:            os.Getenv("ALLOW_COD") == "true",
 	}
-	if cfg.Environment == "" { cfg.Environment = "development" }
+	if cfg.Environment == "" {
+		cfg.Environment = "development"
+	}
 	if cfg.Environment != "development" && cfg.Environment != "test" && cfg.Environment != "production" {
 		return Config{}, errors.New("APP_ENV must be development, test or production")
 	}
