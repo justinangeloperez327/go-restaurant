@@ -44,3 +44,15 @@ func TestReadiness(t *testing.T) {
 		})
 	}
 }
+
+func TestAPISecurityHeaders(t *testing.T) {
+ request:=httptest.NewRequest(http.MethodGet,"/healthz",nil)
+ response:=httptest.NewRecorder()
+ NewRouter(nil).ServeHTTP(response,request)
+ for key,want:=range map[string]string{
+  "X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY",
+  "Referrer-Policy":"no-referrer","Cache-Control":"no-store",
+ }{
+  if got:=response.Header().Get(key);got!=want{t.Errorf("%s = %q, want %q",key,got,want)}
+ }
+}

@@ -74,6 +74,18 @@ func main() {
 		log.Error("invalid delivery fee configuration", "error", err)
 		os.Exit(1)
 	}
+	if cfg.Environment == "production" {
+		// Zero is valid, but the operator must explicitly select zero.
+		// Prevent accidental acceptance of development tax/fee defaults.
+		if _, ok := os.LookupEnv("TAX_RATE_BPS"); !ok {
+			log.Error("production requires explicit TAX_RATE_BPS")
+			os.Exit(1)
+		}
+		if _, ok := os.LookupEnv("DELIVERY_FEE_MINOR"); !ok {
+			log.Error("production requires explicit DELIVERY_FEE_MINOR")
+			os.Exit(1)
+		}
+	}
 	tax, err := orders.ParseNonNegative(os.Getenv("TAX_RATE_BPS"), 10000)
 	if err != nil {
 		log.Error("invalid tax configuration", "error", err)
@@ -134,6 +146,8 @@ func main() {
 		Handler:           httpapi.NewOperationsAppRouter(pool.Ping, service, cfg.WebOrigin, &customer.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}, orderService, subscriptionService, deliveryService, operationService, &catalog.Service{DB: pool, Auth: service, WebOrigin: cfg.WebOrigin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		MaxHeaderBytes:    1 << 20,
 	}
 	shutdownDone := make(chan struct{})
 	go func() {

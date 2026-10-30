@@ -4,6 +4,8 @@ COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY apps/web/ ./
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_API_PUBLIC_URL=http://localhost:8080
+ENV NEXT_PUBLIC_API_PUBLIC_URL=$NEXT_PUBLIC_API_PUBLIC_URL
 RUN npm run build
 
 FROM node:24-alpine

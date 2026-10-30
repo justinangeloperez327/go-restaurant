@@ -21,6 +21,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: "8080"
+      APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: postgres://restaurant:restaurant_dev@db:5432/restaurant?sslmode=disable
       API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
@@ -43,6 +44,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
     restart: unless-stopped
     environment:
       NODE_ENV: production

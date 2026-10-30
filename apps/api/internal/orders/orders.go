@@ -297,7 +297,7 @@ func (s Service) checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	tx, err := s.DB.Begin(ctx)
+	tx, err := s.DB.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
 	if err != nil {
 		fail(w, 503, "database unavailable")
 		return
@@ -412,11 +412,16 @@ func (s Service) finishCheckout(w http.ResponseWriter, r *http.Request, id, meth
 		fail(w, 502, "invalid payment provider session")
 		return
 	}
-	_, err = s.DB.Exec(r.Context(), `UPDATE orders SET stripe_session_id=$2,stripe_checkout_url=$3,updated_at=now()
+	tag, err := s.DB.Exec(r.Context(), `UPDATE orders SET stripe_session_id=$2,stripe_checkout_url=$3,updated_at=now()
  WHERE id=$1::uuid AND payment_method='stripe' AND payment_status='pending'
  AND (stripe_session_id IS NULL OR stripe_session_id=$2)`, id, session.ID, session.URL)
 	if err != nil {
 		fail(w, 503, "cannot save payment session; retry same idempotency key")
+		return
+	}
+	if tag.RowsAffected() != 1 {
+		// Do not send the customer to an unregistered or stale checkout session.
+		fail(w, 409, "payment session changed; review existing order before retrying")
 		return
 	}
 	respond(w, 200, map[string]any{"order_id": id, "payment_method": "stripe", "payment_status": "pending", "redirect_url": session.URL})

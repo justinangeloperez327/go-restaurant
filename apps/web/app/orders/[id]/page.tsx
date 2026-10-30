@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";import {OrderDetail} from "./order-detail";
 export default async function OrderPage({params}:{params:Promise<{id:string}>}){
  const {id}=await params;

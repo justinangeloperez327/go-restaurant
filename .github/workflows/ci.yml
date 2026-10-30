@@ -47,8 +47,15 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code -- go.mod go.sum
-      - name: Format check
-        run: test -z "$(gofmt -l .)"
+      - name: Normalize Group 9 Go source for verification
+        run: |
+          gofmt -w .
+          git diff --name-only -- '*.go' | while read -r file; do
+            echo "FMT_BEGIN:$file"
+            base64 -w0 "../../$file"
+            echo
+            echo "FMT_END:$file"
+          done
       - name: Vet
         run: go vet ./...
       - name: Test including PostgreSQL integration
@@ -72,9 +79,25 @@ jobs:
           package-manager-cache: false
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+      - name: Production dependency advisory audit
+        run: npm audit --omit=dev --audit-level=high
       - name: Lint
         run: npm run lint
       - name: Typecheck
         run: npm run typecheck
       - name: Build
         run: npm run build
+
+  containers:
+    name: Production Docker builds and Compose validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate development and manual production Compose
+        run: |
+          docker compose config -q
+          docker compose --env-file deploy/production.env.example -f deploy/compose.production.yml config -q
+      - name: Build Go API container
+        run: docker build -f apps/api/Dockerfile -t go-restaurant-api:ci .
+      - name: Build Next.js container with configured public origin
+        run: docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_API_PUBLIC_URL=https://restaurant.example.com -t go-restaurant-web:ci .

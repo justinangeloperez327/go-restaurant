@@ -50,6 +50,7 @@ func NewOperationsAppRouter(check databaseCheck, service *auth.Service, webOrigi
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
+	r.Use(securityHeaders)
 	r.Use(cors(webOrigin))
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -119,4 +120,16 @@ func writeJSON(w http.ResponseWriter, code int, value statusResponse) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(value)
+}
+
+func securityHeaders(next http.Handler) http.Handler {
+ return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
+  w.Header().Set("X-Content-Type-Options","nosniff")
+  w.Header().Set("X-Frame-Options","DENY")
+  w.Header().Set("Referrer-Policy","no-referrer")
+  w.Header().Set("Permissions-Policy","camera=(), microphone=(), geolocation=()")
+  w.Header().Set("Cache-Control","no-store")
+  if r.TLS!=nil {w.Header().Set("Strict-Transport-Security","max-age=31536000")}
+  next.ServeHTTP(w,r)
+ })
 }

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { DispatchClient } from "./dispatch-client";
 export default function DispatchPage(){

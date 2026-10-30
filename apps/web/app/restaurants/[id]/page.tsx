@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { AddToCart } from "./add-to-cart";
 import { notFound } from "next/navigation";

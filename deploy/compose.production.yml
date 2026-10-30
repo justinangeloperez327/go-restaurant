@@ -1,0 +1,47 @@
+# MANUAL DEPLOYMENT TEMPLATE. No deployment is triggered by CI.
+# Set your own HTTPS reverse proxy and managed PostgreSQL before launching.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    environment:
+      APP_ENV: production
+      PORT: "8080"
+      DATABASE_URL: ${DATABASE_URL:?set production database URL}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?set HTTPS public API origin}
+      WEB_ORIGIN: ${WEB_ORIGIN:?set HTTPS site origin}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY_PEM: ${APPLE_PRIVATE_KEY_PEM:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ALLOW_COD: ${ALLOW_COD:-false}
+      TAX_RATE_BPS: ${TAX_RATE_BPS:?set configured tax rate, including zero if valid}
+      DELIVERY_FEE_MINOR: ${DELIVERY_FEE_MINOR:?set fee in AED fils, including zero if valid}
+    ports:
+      - "127.0.0.1:8080:8080"
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_PUBLIC_URL: ${API_PUBLIC_URL:?set HTTPS API origin}
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://api:8080
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?set HTTPS public API origin}
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on: [api]

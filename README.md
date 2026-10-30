@@ -11,6 +11,7 @@ Restaurant ordering and subscription platform using Go 1.27.3, Chi, PostgreSQL 1
 - Group 6: weekly meal subscriptions from the cart, schedule/cutoff, auto-renewal, skips, pauses, price caps and idempotent COD delivery orders.
 - Group 7: restaurant-scoped rider dispatch, secure delivery state transitions, GPS sharing, customer SSE tracking and rider management.
 - Group 8: restaurant-scoped operational dashboard, AED management reporting, daily CSV export, deduplicated in-app alerts and individual read state.
+- Group 9: migration checksum verification, security headers, HTTPS production guards, checkout snapshot hardening, container build checks and a manual deployment template.
 
 ## Run locally
 Run: docker compose up --build
@@ -49,3 +50,5 @@ See [docs/subscriptions.md](docs/subscriptions.md) for subscription scheduling, 
 Group 7 implementation and security requirements: [docs/deliveries.md](docs/deliveries.md). HTTPS is required for browser geolocation outside localhost.
 
 Group 8 metric definitions and notifications: [docs/operations.md](docs/operations.md).
+
+**Production readiness:** See [docs/production-readiness.md](docs/production-readiness.md). Groups 1–9 are developed and CI-tested, but **live payment and fulfillment launch blockers remain**. Development Docker Compose uses local-only defaults and is not a production deployment. No automatic deployment.

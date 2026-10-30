@@ -296,3 +296,22 @@ func TestCheckoutInvalidCartAndReplay(t *testing.T) {
 		t.Fatalf("cross-owner address accepted: %d", code)
 	}
 }
+
+func TestCheckoutDoesNotRedirectToUnregisteredStripeSession(t *testing.T) {
+ f:=newFixture(t,true)
+ f.add()
+ key:="checkout_"+random(t)
+ input:=map[string]any{"address_id":f.addrID,"payment_method":"stripe","notes":""}
+ response:=f.expect("POST","/api/v1/checkout",f.token,key,input,200)
+ id:=response["order_id"].(string)
+ // Simulate an interrupted provider-session write that left the order pointing
+ // at an unrelated session ID and no resumable URL.
+ _,err:=f.pool.Exec(context.Background(),`UPDATE orders SET stripe_session_id='cs_test_conflict',
+ stripe_checkout_url='' WHERE id=$1::uuid`,id)
+ if err!=nil{t.Fatal(err)}
+ f.expect("POST","/api/v1/checkout",f.token,key,input,409)
+ var stored string
+ err=f.pool.QueryRow(context.Background(),
+  "SELECT stripe_session_id FROM orders WHERE id=$1::uuid",id).Scan(&stored)
+ if err!=nil||stored!="cs_test_conflict"{t.Fatalf("session overwritten: %q, %v",stored,err)}
+}

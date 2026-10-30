@@ -15,6 +15,7 @@ type OAuthProvider struct {
 }
 
 type Config struct {
+	Environment         string
 	Port                string
 	DatabaseURL         string
 	APIBaseURL          string
@@ -32,6 +33,7 @@ type Config struct {
 
 func Load() (Config, error) {
 	cfg := Config{
+		Environment: os.Getenv("APP_ENV"),
 		Port:        os.Getenv("PORT"),
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		APIBaseURL:  os.Getenv("API_PUBLIC_URL"),
@@ -46,6 +48,10 @@ func Load() (Config, error) {
 		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
 		AllowCOD:            os.Getenv("ALLOW_COD") == "true",
+	}
+	if cfg.Environment == "" { cfg.Environment = "development" }
+	if cfg.Environment != "development" && cfg.Environment != "test" && cfg.Environment != "production" {
+		return Config{}, errors.New("APP_ENV must be development, test or production")
 	}
 	if cfg.Port == "" {
 		cfg.Port = "8080"
@@ -64,12 +70,15 @@ func Load() (Config, error) {
 		cfg.WebOrigin = "http://localhost:3000"
 	}
 	api, err := url.Parse(cfg.APIBaseURL)
-	if err != nil || api.Host == "" || (api.Scheme != "http" && api.Scheme != "https") || api.Path != "" || api.RawQuery != "" {
+	if err != nil || api.Host == "" || (api.Scheme != "http" && api.Scheme != "https") || api.Path != "" || api.RawQuery != "" || api.Fragment != "" || api.User != nil || api.ForceQuery {
 		return Config{}, errors.New("API_PUBLIC_URL must be an origin without a path")
 	}
 	web, err := url.Parse(cfg.WebOrigin)
-	if err != nil || web.Host == "" || (web.Scheme != "http" && web.Scheme != "https") || web.Path != "" || web.RawQuery != "" {
+	if err != nil || web.Host == "" || (web.Scheme != "http" && web.Scheme != "https") || web.Path != "" || web.RawQuery != "" || web.Fragment != "" || web.User != nil || web.ForceQuery {
 		return Config{}, errors.New("WEB_ORIGIN must be an origin without a path")
+	}
+	if cfg.Environment == "production" && (api.Scheme != "https" || web.Scheme != "https") {
+		return Config{}, errors.New("production requires HTTPS API_PUBLIC_URL and WEB_ORIGIN")
 	}
 	cfg.SecureCookies = api.Scheme == "https"
 	if (cfg.Google.ClientID == "") != (cfg.Google.ClientSecret == "") {
@@ -86,6 +95,19 @@ func Load() (Config, error) {
 	}
 	if anyApple && !cfg.SecureCookies {
 		return Config{}, errors.New("Sign in with Apple requires HTTPS API_PUBLIC_URL")
+	}
+	if cfg.Environment == "production" {
+		if parsed, err := url.Parse(cfg.DatabaseURL); err == nil && parsed.User != nil {
+			if password, ok := parsed.User.Password(); ok && password == "restaurant_dev" {
+				return Config{}, errors.New("production DATABASE_URL must not use the development password")
+			}
+		}
+		if !cfg.AllowCOD && cfg.StripeSecretKey == "" {
+			return Config{}, errors.New("production needs at least one configured payment method")
+		}
+	}
+	if cfg.Environment == "production" && (api.Hostname() == "localhost" || web.Hostname() == "localhost") {
+		return Config{}, errors.New("production public origins must not use localhost")
 	}
 	if (cfg.StripeSecretKey == "") != (cfg.StripeWebhookSecret == "") {
 		return Config{}, errors.New("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must both be set")

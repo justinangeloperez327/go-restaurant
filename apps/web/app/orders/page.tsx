@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";import {OrderHistory} from "./order-history";
 export default function OrdersPage(){
  const apiURL=process.env.API_PUBLIC_URL??"http://localhost:8080";
